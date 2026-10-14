@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Integration;
+namespace Honk\Tests\Integration;
 
 use DateTimeImmutable;
-use HonkMe\Client;
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\ConflictException;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Message;
-use HonkMe\Uuid;
+use Honk\Client;
+use Honk\Exception\AuthException;
+use Honk\Exception\ConflictException;
+use Honk\Exception\ValidationException;
+use Honk\Message;
+use Honk\Uuid;
 use PHPUnit\Framework\TestCase;
 
 /**

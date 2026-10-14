@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkServiceProvider;
-use HonkMe\Tests\Support\MockServer;
-use HonkMe\Tests\Unit\ClientTest;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkServiceProvider;
+use Honk\Tests\Support\MockServer;
+use Honk\Tests\Unit\ClientTest;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra

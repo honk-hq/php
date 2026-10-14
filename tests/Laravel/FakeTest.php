@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\ValidationException;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Notifications\HonkMessage;
-use HonkMe\Laravel\Testing\HonkFake;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\ValidationException;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Notifications\HonkMessage;
+use Honk\Laravel\Testing\HonkFake;
+use Honk\Message;
+use Honk\Severity;
 use PHPUnit\Framework\AssertionFailedError;
 
 final class FakeTest extends TestCase
@@ -38,6 +38,23 @@ final class FakeTest extends TestCase
         Honk::assertQueued(fn (Message $m, string $key) => $m->severity === Severity::Beep && $key === 'queued-1');
         $this->assertCount(4, Honk::sent());
         $this->assertSame([], $this->server->requests());
+    }
+
+    public function testFakeRecordsHonkUhohAndPhewLikeTheOldNames(): void
+    {
+        Honk::fake();
+        Honk::honk(['message' => 'Someone bought 3 rubber chickens'], 'order-1042');
+        Honk::uhoh('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen');
+        Honk::defer()->phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.');
+        Honk::send(['message' => 'Someone bought 3 rubber chickens'], 'order-1042');
+        Honk::problem('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen');
+        Honk::defer()->recovery('kitchen/oven', 'Cake saved', 'Nobody needs to know.');
+
+        Honk::assertSentTimes(2, fn (Message $m, string $key) => $m->message === 'Someone bought 3 rubber chickens' && $key === 'order-1042');
+        Honk::assertSentTimes(2, fn (Message $m) => $m->groupKey === 'kitchen/oven' && $m->eventType === 'problem' && $m->severity === Severity::Long);
+        Honk::assertSentTimes(2, fn (Message $m) => $m->groupKey === 'kitchen/oven' && $m->eventType === 'recovery' && $m->severity === Severity::Beep);
+        $sent = Honk::sent();
+        $this->assertEquals([$sent[0], $sent[1], $sent[2]], [$sent[3], $sent[4], $sent[5]]);
     }
 
     public function testRecordedMessagesHaveDefaultsApplied(): void

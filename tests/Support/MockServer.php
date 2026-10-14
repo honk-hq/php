@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Support;
+namespace Honk\Tests\Support;
 
 use RuntimeException;
 

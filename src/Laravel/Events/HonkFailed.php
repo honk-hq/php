@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Events;
+namespace Honk\Laravel\Events;
 
-use HonkMe\Exception\HonkException;
-use HonkMe\Message;
+use Honk\Exception\HonkException;
+use Honk\Message;
 
 /** A send failed after its retries. Retryable failures can be sent again with the same key. */
 final class HonkFailed

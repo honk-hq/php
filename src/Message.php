@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 use DateTimeInterface;
-use HonkMe\Exception\ValidationException;
+use Honk\Exception\ValidationException;
 
 /**
  * Fluent builder for one Honk event. Only the message text is required.

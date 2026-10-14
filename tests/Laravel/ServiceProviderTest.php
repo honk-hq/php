@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Client;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Notifications\HonkMessage;
+use Honk\Client;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Notifications\HonkMessage;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 
@@ -36,6 +36,37 @@ final class ServiceProviderTest extends TestCase
     {
         Honk::problem('queue/failed', 'Jobs failing', '43 failed jobs', ['channel' => 'queue']);
         $this->assertSame(['title' => 'Jobs failing', 'message' => '43 failed jobs', 'severity' => 'error', 'source' => 'laravel', 'environment' => 'testing', 'channel' => 'queue', 'group_key' => 'queue/failed', 'event_type' => 'problem'], $this->lastBody());
+    }
+
+    public function testUhohAndPhewThroughTheFacade(): void
+    {
+        Honk::uhoh('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen');
+        $this->assertSame(['title' => 'The cake is burning', 'message' => 'Smoke in the kitchen', 'severity' => 'error', 'source' => 'laravel', 'environment' => 'testing', 'group_key' => 'kitchen/oven', 'event_type' => 'problem'], $this->lastBody());
+        Honk::phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.');
+        $this->assertSame(['title' => 'Cake saved', 'message' => 'Nobody needs to know.', 'severity' => 'success', 'source' => 'laravel', 'environment' => 'testing', 'group_key' => 'kitchen/oven', 'event_type' => 'recovery'], $this->lastBody());
+        $res = Honk::honk(['message' => 'Someone bought 3 rubber chickens', 'severity' => 'beep']);
+        $this->assertSame('msg_01k6h3w4z5x6y7z8a9b0c1d2e3', $res->id);
+        $this->assertSame(['message' => 'Someone bought 3 rubber chickens', 'severity' => 'success', 'source' => 'laravel', 'environment' => 'testing'], $this->lastBody());
+    }
+
+    public function testOldNamesThroughTheFacadeSendIdenticalRequests(): void
+    {
+        Honk::honk(HonkMessage::make('Someone bought 3 rubber chickens')->beep(), 'order-1042');
+        Honk::send(HonkMessage::make('Someone bought 3 rubber chickens')->beep(), 'order-1042');
+        Honk::uhoh('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen', ['idempotencyKey' => 'oven-1']);
+        Honk::problem('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen', ['idempotencyKey' => 'oven-1']);
+        Honk::phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2']);
+        Honk::recovery('kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2']);
+        $r = array_map(static function (array $request): array {
+            unset($request['at']);
+
+            return $request;
+        }, $this->server->requests());
+        $this->assertCount(6, $r);
+        $this->assertSame($r[0], $r[1]);
+        $this->assertSame($r[2], $r[3]);
+        $this->assertSame($r[4], $r[5]);
+        $this->assertSame(['order-1042', 'order-1042', 'oven-1', 'oven-1', 'oven-2', 'oven-2'], array_map(static fn ($x) => $x['headers']['idempotency-key'], $r));
     }
 
     public function testHornHelpersThroughTheFacade(): void

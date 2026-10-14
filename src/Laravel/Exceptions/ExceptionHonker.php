@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Exceptions;
+namespace Honk\Laravel\Exceptions;
 
-use HonkMe\Exception\HonkException;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Testing\HonkFake;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\HonkException;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Testing\HonkFake;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Container\Container;
@@ -66,9 +66,9 @@ final class ExceptionHonker
             }
             $message = $this->message($e, $groupKey, $severity ?? (is_string($this->config['severity'] ?? null) ? $this->config['severity'] : 'long'));
             match ($this->config['mode'] ?? 'defer') {
-                'sync' => $honk->send($message),
+                'sync' => $honk->honk($message),
                 'queue' => $honk->queue($message),
-                default => $honk->defer(always: true)->send($message),
+                default => $honk->defer(always: true)->honk($message),
             };
         } catch (Throwable $failure) {
             $this->log($failure);
