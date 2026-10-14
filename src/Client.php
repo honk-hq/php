@@ -32,7 +32,7 @@ use Psr\Http\Message\StreamFactoryInterface;
  */
 final class Client
 {
-    public const VERSION = '0.2.1';
+    public const VERSION = '0.3.0';
 
     private readonly string $url;
     private readonly string $key;

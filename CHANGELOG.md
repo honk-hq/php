@@ -1,8 +1,32 @@
 # Changelog
 
-All notable changes to `honk-me/honk-me` (Composer) are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
-[Semantic Versioning](https://semver.org/).
+All notable changes to `honk/honk` (Composer; `honk-me/honk-me` until 0.2.1) are documented
+here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
+project uses [Semantic Versioning](https://semver.org/).
+
+## [0.3.0] - 2026-10-14
+
+### Changed
+- **Breaking:** the package is now `honk/honk` (was `honk-me/honk-me`) and the namespace is
+  `Honk\` (was `HonkMe\`): `Honk\Client`, `Honk\Message`, `Honk\Laravel\Facades\Honk` and so on.
+  Laravel auto-discovery registers the new provider and alias; the `Honk` facade,
+  `config/honk.php`, its `honk-config` tag and the Artisan commands keep their names. To
+  upgrade, run
+
+  ```sh
+  composer remove honk-me/honk-me && composer require honk/honk
+  ```
+
+  then replace `HonkMe\` with `Honk\` in your code. Jobs queued before the upgrade by
+  `Honk::queue()` name the old classes, so let the queue drain before you deploy.
+- `php artisan honk:test` without `--message` sends "Honk! Honk! Your phone and your app are on
+  speaking terms."
+
+### Added
+- `honk()`, `uhoh()` and `phew()` on `Client`, the `Honk` facade and `Honk::defer()`: `honk()`
+  sends, `uhoh()` opens a problem and `phew()` closes it. They take the same arguments as
+  `send()`, `problem()` and `recovery()`, which stay as aliases (no deprecation notice) and send
+  exactly the same request. `Honk::fake()` records both spellings alike.
 
 ## [0.2.1] - 2026-10-14
 
