@@ -28,7 +28,7 @@ final class TestCommand extends Command
         }
         // No app name: the push's subtitle already names the project (usually the same name)
         $text = $this->option('message');
-        $message = Message::make(is_string($text) && $text !== '' ? $text : 'Sent with php artisan honk:test.')
+        $message = Message::make(is_string($text) && $text !== '' ? $text : 'Honk! Honk! Your phone and your app are on speaking terms.')
             ->title('Honk test')
             ->severity($severity)
             ->channel('honk-test');
