@@ -66,9 +66,9 @@ final class ExceptionHonker
             }
             $message = $this->message($e, $groupKey, $severity ?? (is_string($this->config['severity'] ?? null) ? $this->config['severity'] : 'long'));
             match ($this->config['mode'] ?? 'defer') {
-                'sync' => $honk->send($message),
+                'sync' => $honk->honk($message),
                 'queue' => $honk->queue($message),
-                default => $honk->defer(always: true)->send($message),
+                default => $honk->defer(always: true)->honk($message),
             };
         } catch (Throwable $failure) {
             $this->log($failure);

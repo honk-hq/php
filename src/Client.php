@@ -28,7 +28,7 @@ use Psr\Http\Message\StreamFactoryInterface;
  * alive). Framework-agnostic; Laravel users get it through the Honk facade.
  *
  *     $honk = new Client(url: getenv('HONK_URL'), key: getenv('HONK_KEY'));
- *     $honk->send(Message::make('nightly pg_dump took 42 s')->title('Backup finished')->success());
+ *     $honk->honk(Message::make('nightly pg_dump took 42 s')->title('Backup finished')->beep());
  */
 final class Client
 {
@@ -46,7 +46,7 @@ final class Client
      * @param string                                                         $key            project ingestion key honk_… (server-side only)
      * @param int                                                            $timeoutMs      timeout of one HTTP attempt
      * @param int                                                            $retries        retries after the first attempt (network errors, 429 and 5xx only)
-     * @param int                                                            $deadlineMs     total time budget of one send(), waits included
+     * @param int                                                            $deadlineMs     total time budget of one honk(), waits included
      * @param array{source?: ?string, environment?: ?string, channel?: ?string} $defaults    applied when a message leaves these fields unset
      * @param bool                                                           $validate       validate locally before sending (the server always validates)
      * @param int                                                            $backoffBaseMs  backoff: attempt n waits rand(0, min(max, base·2ⁿ)) or Retry-After when longer
@@ -136,7 +136,7 @@ final class Client
      *
      * @throws HonkException (ValidationException, AuthException, QuotaException, ConflictException, NetworkException, TimeoutException, ServerException)
      */
-    public function send(Message|array $message, ?string $idempotencyKey = null): Accepted
+    public function honk(Message|array $message, ?string $idempotencyKey = null): Accepted
     {
         $message = is_array($message) ? Message::fromArray($message) : $message;
         $body = Wire::encode(Wire::build($message, $this->defaults, $this->validate));
@@ -177,13 +177,35 @@ final class Client
     }
 
     /**
+     * Same as honk().
+     *
+     * @param Message|array<string, mixed> $message
+     *
+     * @throws HonkException
+     */
+    public function send(Message|array $message, ?string $idempotencyKey = null): Accepted
+    {
+        return $this->honk($message, $idempotencyKey);
+    }
+
+    /**
      * A problem for $groupKey (opens or continues its incident). Severity defaults to long (error).
      *
      * @param array<string, mixed> $options message fields in camelCase, plus 'idempotencyKey'
      */
-    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function uhoh(string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->sendHelper(Helper::problem($groupKey, $title, $message, $options));
+    }
+
+    /**
+     * Same as uhoh().
+     *
+     * @param array<string, mixed> $options
+     */
+    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    {
+        return $this->uhoh($groupKey, $title, $message, $options);
     }
 
     /**
@@ -191,9 +213,19 @@ final class Client
      *
      * @param array<string, mixed> $options
      */
-    public function recovery(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function phew(string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->sendHelper(Helper::recovery($groupKey, $title, $message, $options));
+    }
+
+    /**
+     * Same as phew().
+     *
+     * @param array<string, mixed> $options
+     */
+    public function recovery(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    {
+        return $this->phew($groupKey, $title, $message, $options);
     }
 
     /**
@@ -281,7 +313,7 @@ final class Client
     }
 
     /**
-     * The wire body (snake_case) that send() would post, with defaults applied and validated.
+     * The wire body (snake_case) that honk() would post, with defaults applied and validated.
      *
      * @param Message|array<string, mixed> $message
      *
@@ -294,7 +326,7 @@ final class Client
 
     private function sendHelper(Message $message): Accepted
     {
-        return $this->send($message);
+        return $this->honk($message);
     }
 
     private static function makeTransport(?ClientInterface $client, ?RequestFactoryInterface $requests, ?StreamFactoryInterface $streams): Transport

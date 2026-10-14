@@ -109,7 +109,7 @@ final class ScheduleHonk
     {
         $container = \Illuminate\Container\Container::getInstance();
         try {
-            $container->make(HonkManager::class)->send($message);
+            $container->make(HonkManager::class)->honk($message);
         } catch (Throwable $e) {
             // The scheduler must keep running; HonkFailed was dispatched for listeners.
             $container->make(LoggerInterface::class)->warning('Honk scheduler hook failed: ' . $e->getMessage());

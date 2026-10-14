@@ -21,7 +21,8 @@ use PHPUnit\Framework\Assert as PHPUnit;
  * and Context metadata are applied, and the recorded copy has a canonical Severity case, so
  * `fn (Message $m) => $m->severity === Severity::Loud` works whatever spelling was used.
  *
- * - sent: send(), the helpers, Honk::defer() (recorded immediately) and the notification channel;
+ * - sent: honk() / send(), uhoh(), phew() and the other helpers, Honk::defer() (recorded
+ *   immediately) and the notification channel;
  * - queued: Honk::queue() (nothing is dispatched).
  */
 class HonkFake extends HonkManager implements Fake
@@ -50,7 +51,8 @@ class HonkFake extends HonkManager implements Fake
     }
 
     /**
-     * Messages sent (send, helpers, defer, notifications), optionally filtered.
+     * Messages sent (honk/send, uhoh, phew and the other helpers, defer, notifications),
+     * optionally filtered.
      *
      * @param (callable(Message, string): bool)|null $callback receives the message and its idempotency key
      *
