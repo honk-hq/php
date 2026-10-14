@@ -53,7 +53,14 @@ Create a project and an ingestion key at [honk-me.app](https://honk-me.app). Its
 `Client::fromEnv()` reads `HONK_URL`, `HONK_KEY` and the optional `HONK_SOURCE`,
 `HONK_ENVIRONMENT` and `HONK_CHANNEL` defaults; `new Client(url: …, key: …)` takes them
 directly (see [Options](#options)). Coming from `honk-me/honk-me`: the package and the namespace
-were renamed in 0.3.0, and `CHANGELOG.md` has the two-step upgrade.
+were renamed in 0.3.0. Add the new one before removing the old one, so your app keeps booting in
+between:
+
+```sh
+composer require honk/honk
+# replace HonkMe\ with Honk\ in your code
+composer remove honk-me/honk-me
+```
 
 ## The Honk scale
 

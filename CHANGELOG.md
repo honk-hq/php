@@ -11,13 +11,19 @@ project uses [Semantic Versioning](https://semver.org/).
   `Honk\` (was `HonkMe\`): `Honk\Client`, `Honk\Message`, `Honk\Laravel\Facades\Honk` and so on.
   Laravel auto-discovery registers the new provider and alias; the `Honk` facade,
   `config/honk.php`, its `honk-config` tag and the Artisan commands keep their names. To
-  upgrade, run
+  upgrade, add the new package first, replace `HonkMe\` with `Honk\` in your code, and only
+  then remove the old one:
 
   ```sh
-  composer remove honk-me/honk-me && composer require honk/honk
+  composer require honk/honk
+  # replace HonkMe\ with Honk\ in your code
+  composer remove honk-me/honk-me
   ```
 
-  then replace `HonkMe\` with `Honk\` in your code. Jobs queued before the upgrade by
+  In that order, because Composer runs `php artisan package:discover` after each step: removed
+  first, an app that calls `->honkOnFailure()` or `Honk::` in `routes/console.php` stops
+  booting ("Method …::honkOnFailure does not exist") and the require never runs. If that
+  already happened, `composer require honk/honk` fixes it. Jobs queued before the upgrade by
   `Honk::queue()` name the old classes, so let the queue drain before you deploy.
 - `php artisan honk:test` without `--message` sends "Honk! Honk! Your phone and your app are on
   speaking terms."
