@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Unit;
+namespace Honk\Tests\Unit;
 
 use DateTimeImmutable;
-use HonkMe\Accepted;
-use HonkMe\Client;
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\ConflictException;
-use HonkMe\Exception\HonkException;
-use HonkMe\Exception\NetworkException;
-use HonkMe\Exception\QuotaException;
-use HonkMe\Exception\ServerException;
-use HonkMe\Exception\TimeoutException;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Message;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Accepted;
+use Honk\Client;
+use Honk\Exception\AuthException;
+use Honk\Exception\ConflictException;
+use Honk\Exception\HonkException;
+use Honk\Exception\NetworkException;
+use Honk\Exception\QuotaException;
+use Honk\Exception\ServerException;
+use Honk\Exception\TimeoutException;
+use Honk\Exception\ValidationException;
+use Honk\Message;
+use Honk\Tests\Support\MockServer;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -144,6 +144,50 @@ final class ClientTest extends TestCase
         $this->assertSame('warning', json_decode($r[2]['body'], true)['severity']);
         $this->assertSame(['message' => 'Payments down', 'severity' => 'critical'], json_decode($r[3]['body'], true));
         $this->assertSame('critical', json_decode($r[4]['body'], true)['severity']);
+    }
+
+    public function testUhohOpensAndPhewCloses(): void
+    {
+        $honk = $this->client();
+        $honk->honk(Message::make('Someone bought 3 rubber chickens')->title('New order')->beep());
+        $honk->uhoh('kitchen/oven', 'The cake is burning', 'Oven at 260 °C, smoke in the kitchen', ['channel' => 'kitchen']);
+        $honk->phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2']);
+        $honk->uhoh('kitchen/oven', null, 'Smoke again', ['severity' => 'blast']);
+        $r = $this->server->requests();
+        $this->assertSame(['title' => 'New order', 'message' => 'Someone bought 3 rubber chickens', 'severity' => 'success'], json_decode($r[0]['body'], true));
+        $this->assertSame(['title' => 'The cake is burning', 'message' => 'Oven at 260 °C, smoke in the kitchen', 'severity' => 'error', 'channel' => 'kitchen', 'group_key' => 'kitchen/oven', 'event_type' => 'problem'], json_decode($r[1]['body'], true));
+        $this->assertSame(['title' => 'Cake saved', 'message' => 'Nobody needs to know.', 'severity' => 'success', 'group_key' => 'kitchen/oven', 'event_type' => 'recovery'], json_decode($r[2]['body'], true));
+        $this->assertSame('oven-2', $r[2]['headers']['idempotency-key']);
+        $this->assertSame('critical', json_decode($r[3]['body'], true)['severity']);
+    }
+
+    /**
+     * @return iterable<string, array{string, string, list<mixed>}>
+     */
+    public static function aliases(): iterable
+    {
+        yield 'send = honk' => ['honk', 'send', [Message::make('Someone bought 3 rubber chickens')->title('New order')->beep()->groupKey('orders/1042'), 'order-1042']];
+        yield 'send = honk (array)' => ['honk', 'send', [['message' => 'x', 'idempotencyKey' => 'k-1', 'actions' => [['title' => 'Call', 'url' => 'tel:+15550134']]]]];
+        yield 'problem = uhoh' => ['uhoh', 'problem', ['kitchen/oven', 'The cake is burning', 'Smoke in the kitchen', ['idempotencyKey' => 'oven-1', 'channel' => 'kitchen']]];
+        yield 'recovery = phew' => ['phew', 'recovery', ['kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2', 'severity' => 'light']]];
+    }
+
+    /** @param list<mixed> $args */
+    #[DataProvider('aliases')]
+    public function testOldNamesStillWorkAndSendIdenticalRequests(string $new, string $old, array $args): void
+    {
+        $honk = $this->client();
+        $a = $honk->{$new}(...$args);
+        $b = $honk->{$old}(...$args);
+        $this->assertInstanceOf(Accepted::class, $a);
+        $this->assertInstanceOf(Accepted::class, $b);
+        $r = array_map(static function (array $request): array {
+            unset($request['at']);
+
+            return $request;
+        }, $this->server->requests());
+        $this->assertCount(2, $r);
+        $this->assertSame($r[0], $r[1], "{$old}() must send exactly what {$new}() sends");
     }
 
     public function testDuplicateAndExplicitKey(): void

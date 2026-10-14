@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel;
+namespace Honk\Laravel;
 
 use DateInterval;
 use DateTimeInterface;
-use HonkMe\Accepted;
-use HonkMe\Client;
-use HonkMe\Exception\HonkException;
-use HonkMe\Helper;
-use HonkMe\Laravel\Events\HonkFailed;
-use HonkMe\Laravel\Events\HonkSent;
-use HonkMe\Laravel\Jobs\SendHonkMessage;
-use HonkMe\Laravel\Support\ContextMetadata;
-use HonkMe\Message;
-use HonkMe\Uuid;
-use HonkMe\Wire;
+use Honk\Accepted;
+use Honk\Client;
+use Honk\Exception\HonkException;
+use Honk\Helper;
+use Honk\Laravel\Events\HonkFailed;
+use Honk\Laravel\Events\HonkSent;
+use Honk\Laravel\Jobs\SendHonkMessage;
+use Honk\Laravel\Support\ContextMetadata;
+use Honk\Message;
+use Honk\Uuid;
+use Honk\Wire;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -27,10 +27,10 @@ use function Illuminate\Support\defer;
 
 /**
  * What the Honk facade resolves to. Every way of sending goes through deliver(), so events,
- * Context metadata and Honk::fake() behave the same for send(), defer(), queue(), the
+ * Context metadata and Honk::fake() behave the same for honk(), defer(), queue(), the
  * notification channel, exception reports and scheduler hooks.
  *
- * - send(): now, in this process (retries within the call; up to the configured deadline).
+ * - honk() (or send()): now, in this process (retries within the call; up to the configured deadline).
  * - defer(): after the HTTP response is sent (or the command/job finishes), no queue needed.
  * - queue(): from a queue worker; survives restarts and retries with the same key.
  */
@@ -67,7 +67,7 @@ class HonkManager
             $route instanceof Client => $route,
             is_string($route) => self::makeClient(['key' => $route] + $this->config),
             is_array($route) => self::makeClient(self::stringKeys($route) + $this->config),
-            default => throw new InvalidArgumentException('Honk: routeNotificationForHonk() must return null, false, an ingestion key, an array of config overrides or a HonkMe\Client'),
+            default => throw new InvalidArgumentException('Honk: routeNotificationForHonk() must return null, false, an ingestion key, an array of config overrides or a Honk\Client'),
         };
     }
 
@@ -76,11 +76,21 @@ class HonkManager
      *
      * @param Message|array<string, mixed> $message
      */
-    public function send(Message|array $message, ?string $idempotencyKey = null): Accepted
+    public function honk(Message|array $message, ?string $idempotencyKey = null): Accepted
     {
         [$message, $key] = $this->prepare($message, $idempotencyKey);
 
         return $this->deliver($message, $key, null, 'send');
+    }
+
+    /**
+     * Same as honk().
+     *
+     * @param Message|array<string, mixed> $message
+     */
+    public function send(Message|array $message, ?string $idempotencyKey = null): Accepted
+    {
+        return $this->honk($message, $idempotencyKey);
     }
 
     /** Sends to a notification route (used by HonkChannel). */
@@ -151,7 +161,7 @@ class HonkManager
     public function deliver(Message $message, string $idempotencyKey, mixed $route, string $via): Accepted
     {
         try {
-            $accepted = $this->clientFor($route)->send($message, $idempotencyKey);
+            $accepted = $this->clientFor($route)->honk($message, $idempotencyKey);
         } catch (HonkException $e) {
             $this->events->dispatch(new HonkFailed($message, $e, $idempotencyKey, $via));
             throw $e;
@@ -161,16 +171,46 @@ class HonkManager
         return $accepted;
     }
 
-    /** @param array<string, mixed> $options */
-    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    /**
+     * A problem for $groupKey (opens or continues its incident); a long honk unless
+     * $options['severity'] says otherwise.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function uhoh(string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::problem($groupKey, $title, $message, $options));
+        return $this->honk(Helper::problem($groupKey, $title, $message, $options));
     }
 
-    /** @param array<string, mixed> $options */
+    /**
+     * Same as uhoh().
+     *
+     * @param array<string, mixed> $options
+     */
+    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    {
+        return $this->uhoh($groupKey, $title, $message, $options);
+    }
+
+    /**
+     * A recovery for $groupKey (closes its open incident); a beep unless $options['severity']
+     * says otherwise.
+     *
+     * @param array<string, mixed> $options
+     */
+    public function phew(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    {
+        return $this->honk(Helper::recovery($groupKey, $title, $message, $options));
+    }
+
+    /**
+     * Same as phew().
+     *
+     * @param array<string, mixed> $options
+     */
     public function recovery(string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::recovery($groupKey, $title, $message, $options));
+        return $this->phew($groupKey, $title, $message, $options);
     }
 
     /**
@@ -180,7 +220,7 @@ class HonkManager
      */
     public function light(?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::severity('info', $title, $message, $options));
+        return $this->honk(Helper::severity('info', $title, $message, $options));
     }
 
     /**
@@ -190,7 +230,7 @@ class HonkManager
      */
     public function beep(?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::severity('success', $title, $message, $options));
+        return $this->honk(Helper::severity('success', $title, $message, $options));
     }
 
     /**
@@ -200,7 +240,7 @@ class HonkManager
      */
     public function loud(?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::severity('warning', $title, $message, $options));
+        return $this->honk(Helper::severity('warning', $title, $message, $options));
     }
 
     /**
@@ -210,7 +250,7 @@ class HonkManager
      */
     public function long(?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::severity('error', $title, $message, $options));
+        return $this->honk(Helper::severity('error', $title, $message, $options));
     }
 
     /**
@@ -220,7 +260,7 @@ class HonkManager
      */
     public function blast(?string $title, string $message, array $options = []): Accepted
     {
-        return $this->send(Helper::severity('critical', $title, $message, $options));
+        return $this->honk(Helper::severity('critical', $title, $message, $options));
     }
 
     /** @param array<string, mixed> $options */

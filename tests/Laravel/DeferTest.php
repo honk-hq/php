@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\ValidationException;
-use HonkMe\Laravel\Facades\Honk;
+use Honk\Exception\ValidationException;
+use Honk\Laravel\Facades\Honk;
 use Illuminate\Support\Facades\Route;
 
 final class DeferTest extends TestCase
@@ -43,6 +43,24 @@ final class DeferTest extends TestCase
     {
         $this->expectException(ValidationException::class);
         Honk::defer()->loud('Bad', 'link', ['url' => 'ftp://example.com']);
+    }
+
+    public function testDeferredUhohPhewAndHonkMatchTheOldNames(): void
+    {
+        $this->withoutDefer();
+        Honk::defer()->uhoh('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen', ['idempotencyKey' => 'oven-1']);
+        Honk::defer()->problem('kitchen/oven', 'The cake is burning', 'Smoke in the kitchen', ['idempotencyKey' => 'oven-1']);
+        Honk::defer()->phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2']);
+        Honk::defer()->recovery('kitchen/oven', 'Cake saved', 'Nobody needs to know.', ['idempotencyKey' => 'oven-2']);
+        Honk::defer()->honk(['message' => 'Someone bought 3 rubber chickens'], 'order-1042');
+        Honk::defer()->send(['message' => 'Someone bought 3 rubber chickens'], 'order-1042');
+        $r = array_map(static fn (array $x) => [$x['headers']['idempotency-key'], json_decode($x['body'], true)], $this->server->requests());
+        $this->assertCount(6, $r);
+        $this->assertSame($r[0], $r[1]);
+        $this->assertSame($r[2], $r[3]);
+        $this->assertSame($r[4], $r[5]);
+        $this->assertSame(['problem', 'error'], [$r[0][1]['event_type'], $r[0][1]['severity']]);
+        $this->assertSame(['recovery', 'success'], [$r[2][1]['event_type'], $r[2][1]['severity']]);
     }
 
     public function testWithoutDeferSendsAtOnce(): void

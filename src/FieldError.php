@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 /** One invalid field, from the server (error.fields[]) or from local validation. */
 final class FieldError

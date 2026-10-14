@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Http;
+namespace Honk\Http;
 
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;

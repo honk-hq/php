@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Console;
+namespace Honk\Laravel\Console;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;

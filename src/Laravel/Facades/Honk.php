@@ -2,36 +2,39 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Facades;
+namespace Honk\Laravel\Facades;
 
 use Closure;
-use HonkMe\Laravel\Exceptions\ExceptionHonker;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Testing\HonkFake;
+use Honk\Laravel\Exceptions\ExceptionHonker;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Testing\HonkFake;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use Throwable;
 
 /**
- * @method static \HonkMe\Accepted send(\HonkMe\Message|array<string, mixed> $message, ?string $idempotencyKey = null)
- * @method static \HonkMe\Laravel\Jobs\SendHonkMessage queue(\HonkMe\Message|array<string, mixed> $message, ?string $idempotencyKey = null, \DateTimeInterface|\DateInterval|int|null $delay = null)
- * @method static \HonkMe\Laravel\PendingDeferredHonk defer(bool $always = false)
- * @method static \HonkMe\Accepted problem(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted recovery(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted light(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted beep(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted loud(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted long(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted blast(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted info(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted success(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted warning(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted error(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Accepted critical(?string $title, string $message, array<string, mixed> $options = [])
- * @method static \HonkMe\Client client()
- * @method static \HonkMe\Client clientFor(mixed $route)
- * @method static list<\HonkMe\Message> sent(?callable $callback = null)
- * @method static list<\HonkMe\Message> queued(?callable $callback = null)
+ * @method static \Honk\Accepted honk(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null)
+ * @method static \Honk\Accepted send(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null)
+ * @method static \Honk\Laravel\Jobs\SendHonkMessage queue(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null, \DateTimeInterface|\DateInterval|int|null $delay = null)
+ * @method static \Honk\Laravel\PendingDeferredHonk defer(bool $always = false)
+ * @method static \Honk\Accepted uhoh(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted problem(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted phew(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted recovery(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted light(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted beep(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted loud(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted long(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted blast(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted info(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted success(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted warning(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted error(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted critical(?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Client client()
+ * @method static \Honk\Client clientFor(mixed $route)
+ * @method static list<\Honk\Message> sent(?callable $callback = null)
+ * @method static list<\Honk\Message> queued(?callable $callback = null)
  * @method static void assertSent(?callable $callback = null)
  * @method static void assertSentTimes(int $times, ?callable $callback = null)
  * @method static void assertNotSent(callable $callback)

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\AuthException;
-use HonkMe\Laravel\Events\HonkFailed;
-use HonkMe\Laravel\Events\HonkSent;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Exception\AuthException;
+use Honk\Laravel\Events\HonkFailed;
+use Honk\Laravel\Events\HonkSent;
+use Honk\Laravel\Facades\Honk;
+use Honk\Tests\Support\MockServer;
 use Illuminate\Support\Facades\Event;
 
 final class EventsTest extends TestCase

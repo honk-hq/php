@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Exception;
+namespace Honk\Exception;
 
-use HonkMe\FieldError;
+use Honk\FieldError;
 use Throwable;
 
 /** The message is invalid: rejected locally before sending, or by the server (400, 413, 415, 422). */

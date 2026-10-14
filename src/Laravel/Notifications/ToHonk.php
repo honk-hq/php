@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Notifications;
+namespace Honk\Laravel\Notifications;
 
-use HonkMe\Message;
+use Honk\Message;
 
 /**
  * Implement on notifications that use the honk channel. Implementations may narrow the return

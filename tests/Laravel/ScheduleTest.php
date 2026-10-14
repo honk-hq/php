@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Laravel\Facades\Honk;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 
@@ -60,6 +60,6 @@ final class ScheduleTest extends TestCase
     {
         $schedule = $this->app->make(Schedule::class);
         $event = $schedule->command('inspire --quiet');
-        $this->assertSame('schedule/inspire --quiet', \HonkMe\Laravel\Scheduling\ScheduleHonk::groupKeyFor($event));
+        $this->assertSame('schedule/inspire --quiet', \Honk\Laravel\Scheduling\ScheduleHonk::groupKeyFor($event));
     }
 }

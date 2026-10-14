@@ -1,5 +1,5 @@
 {
-    "name": "honk-me/honk-me",
+    "name": "honk/honk",
     "description": "Official PHP client for Honk (honk-me.app): send events from apps, scripts and automations to your phone. Laravel facade, queued sends and notification channel included.",
     "type": "library",
     "license": "MIT",
@@ -49,21 +49,21 @@
     },
     "autoload": {
         "psr-4": {
-            "HonkMe\\": "src/"
+            "Honk\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "HonkMe\\Tests\\": "tests/"
+            "Honk\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "HonkMe\\Laravel\\HonkServiceProvider"
+                "Honk\\Laravel\\HonkServiceProvider"
             ],
             "aliases": {
-                "Honk": "HonkMe\\Laravel\\Facades\\Honk"
+                "Honk": "Honk\\Laravel\\Facades\\Honk"
             }
         },
         "branch-alias": {

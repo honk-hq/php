@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Support;
+namespace Honk\Laravel\Support;
 
-use HonkMe\Message;
+use Honk\Message;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Facades\Context;
 

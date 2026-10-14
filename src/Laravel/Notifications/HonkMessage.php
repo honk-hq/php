@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Notifications;
+namespace Honk\Laravel\Notifications;
 
-use HonkMe\Message;
+use Honk\Message;
 
 /**
- * The message a notification's toHonk() returns. Same fluent API as HonkMe\Message.
+ * The message a notification's toHonk() returns. Same fluent API as Honk\Message.
  *
  *     public function toHonk(object $notifiable): HonkMessage
  *     {

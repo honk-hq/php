@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Integration;
+namespace Honk\Tests\Integration;
 
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkServiceProvider;
-use HonkMe\Laravel\Notifications\HonkMessage;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkServiceProvider;
+use Honk\Laravel\Notifications\HonkMessage;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 use Orchestra\Testbench\TestCase;
@@ -62,7 +62,7 @@ final class LaravelIntegrationTest extends TestCase
     public function testDeferExceptionReportingAndTheTestCommand(): void
     {
         $sent = [];
-        \Illuminate\Support\Facades\Event::listen(\HonkMe\Laravel\Events\HonkSent::class, function ($e) use (&$sent): void {
+        \Illuminate\Support\Facades\Event::listen(\Honk\Laravel\Events\HonkSent::class, function ($e) use (&$sent): void {
             $sent[] = $e->via . ':' . $e->accepted->id;
         });
 
