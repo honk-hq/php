@@ -34,7 +34,7 @@ final class TestCommand extends Command
             ->channel('honk-test');
 
         try {
-            $accepted = $honk->send($message);
+            $accepted = $honk->honk($message);
         } catch (InvalidArgumentException $e) {
             $this->components->error($e->getMessage());
 

@@ -8,7 +8,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Base class of every exception thrown by Client::send() and the helpers.
+ * Base class of every exception thrown by Client::honk() (send()) and the helpers.
  *
  * Retryable exceptions (network, timeout, 5xx, quota) can be retried later with the same
  * $idempotencyKey without creating duplicates.

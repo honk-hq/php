@@ -13,10 +13,13 @@ use Illuminate\Support\Facades\Facade;
 use Throwable;
 
 /**
+ * @method static \Honk\Accepted honk(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null)
  * @method static \Honk\Accepted send(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null)
  * @method static \Honk\Laravel\Jobs\SendHonkMessage queue(\Honk\Message|array<string, mixed> $message, ?string $idempotencyKey = null, \DateTimeInterface|\DateInterval|int|null $delay = null)
  * @method static \Honk\Laravel\PendingDeferredHonk defer(bool $always = false)
+ * @method static \Honk\Accepted uhoh(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
  * @method static \Honk\Accepted problem(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
+ * @method static \Honk\Accepted phew(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
  * @method static \Honk\Accepted recovery(string $groupKey, ?string $title, string $message, array<string, mixed> $options = [])
  * @method static \Honk\Accepted light(?string $title, string $message, array<string, mixed> $options = [])
  * @method static \Honk\Accepted beep(?string $title, string $message, array<string, mixed> $options = [])
