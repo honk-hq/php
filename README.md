@@ -3,9 +3,34 @@
 [![CI](https://github.com/honk-me/honk-php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-me/honk-php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
-Official PHP client for [Honk](https://honk-me.app), the inbox that turns events from your
-apps, scripts, cron jobs and CI into calm, grouped push notifications on your phone.
-Framework-agnostic, with a first-class Laravel 13 integration.
+Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-me.app),
+the inbox that turns events from apps, scripts, cron jobs and CI into calm, grouped push
+notifications. It works in any PHP 8.3 app and comes with a full Laravel 13 integration.
+
+```php
+use Honk\Laravel\Facades\Honk;
+
+// The oven sensor smells trouble.
+Honk::uhoh('kitchen/oven', 'The cake is burning', 'Oven at 260 °C and climbing.');
+
+// Someone got there in time.
+Honk::phew('kitchen/oven', 'Cake saved', 'Nobody needs to know.');
+```
+
+`uhoh()` opens a problem and `phew()` closes it. The shared group key `kitchen/oven` ties them
+together: an oven that keeps panicking adds to the same incident instead of buzzing you every
+minute, and `phew()` closes it with one last push.
+
+No Laravel? Same idea, with a client:
+
+```php
+use Honk\Client;
+use Honk\Message;
+
+$honk = Client::fromEnv(); // HONK_URL and HONK_KEY
+
+$honk->honk(Message::make('Someone bought 3 rubber chickens.')->title('New order')->beep());
+```
 
 - PHP 8.3+. ext-curl with keep-alive by default, or any PSR-18 client.
 - Laravel 13: auto-discovered provider, `Honk` facade, `Honk::defer()` / `Honk::queue()`,
@@ -25,17 +50,10 @@ composer require honk/honk
 Create a project and an ingestion key at [honk-me.app](https://honk-me.app). Its
 *Integrations* page generates ready-to-paste code for plain PHP and Laravel.
 
-## Quick start
-
-```php
-use Honk\Client;
-
-$honk = new Client(url: getenv('HONK_URL'), key: getenv('HONK_KEY'));
-$honk->beep('Backup finished', 'nightly pg_dump took 42 s');
-```
-
 `Client::fromEnv()` reads `HONK_URL`, `HONK_KEY` and the optional `HONK_SOURCE`,
-`HONK_ENVIRONMENT` and `HONK_CHANNEL` defaults.
+`HONK_ENVIRONMENT` and `HONK_CHANNEL` defaults; `new Client(url: …, key: …)` takes them
+directly (see [Options](#options)). Coming from `honk-me/honk-me`: the package and the namespace
+were renamed in 0.3.0, and `CHANGELOG.md` has the two-step upgrade.
 
 ## The Honk scale
 
@@ -166,7 +184,7 @@ Honk::loud('Disk 91%', '/var on app-01', ['groupKey' => 'disk/app-01/var']);    
 |---|---|---|
 | `Honk::defer()` | in this process, after the HTTP response is sent (Laravel's `defer()`; after the command or job in the console and on queues) | web requests where a lost honk is acceptable if the process dies; no worker needed. Skipped when the request fails (4xx/5xx) unless `Honk::defer(always: true)` |
 | `Honk::queue()` | in a queue worker (`SendHonkMessage`, `#[Tries(5)]`, `#[Backoff(10, 60, 300, 900)]`) | anything that must arrive: survives restarts and retries with the same key; a daily quota releases the job until the reset |
-| `Honk::send()`, `Honk::light()` … | right now, retries included (up to `honk.deadline`) | jobs, commands, the scheduler |
+| `Honk::honk()`, `Honk::light()` … | right now, retries included (up to `honk.deadline`) | jobs, commands, the scheduler |
 
 `defer()` and `queue()` validate the message immediately, so mistakes surface in your code,
 not later. `queue()` returns the job; the connection and queue come from
@@ -190,11 +208,12 @@ Honk::assertQueued(fn (Message $m, string $idempotencyKey) => $m->channel === 'i
 Honk::assertNothingSent(); // also assertNothingQueued(), assertNothingOutgoing()
 ```
 
-The fake records `send()`, the helpers, `defer()` and notification-channel sends as *sent*, and
-`queue()` as *queued*; nothing touches the network. It validates like the real client (an
-invalid message still throws), applies the defaults and Context metadata, and records the
-severity as a `Severity` case whatever spelling was used. Callbacks receive the message and its
-idempotency key. With `Notification::fake()` instead, `toHonk()` is never called.
+The fake records `honk()`, `uhoh()`, `phew()`, the horn helpers, `defer()` and
+notification-channel sends as *sent*, and `queue()` as *queued*; nothing touches the network.
+It validates like the real client (an invalid message still throws), applies the defaults and
+Context metadata, and records the severity as a `Severity` case whatever spelling was used.
+Callbacks receive the message and its idempotency key. With `Notification::fake()` instead,
+`toHonk()` is never called.
 
 ### Exceptions
 
@@ -247,8 +266,8 @@ dispatched them.
 ### Events and container
 
 - `Honk\Laravel\Events\HonkSent` (message, `Accepted`, idempotency key, `via`) and
-  `HonkFailed` (message, exception, idempotency key, `via`) fire for every send: `send`,
-  `defer`, `queue` or `notification`.
+  `HonkFailed` (message, exception, idempotency key, `via`) fire for every message; `via` is
+  `'send'` (sent right away), `'defer'`, `'queue'` or `'notification'`.
 - `HonkManager` (the facade root) is a `#[Singleton]` that receives `#[Config('honk')]`; inject
   it, or `Honk\Client`, anywhere. Config is read when Honk is first used.
 
@@ -257,13 +276,16 @@ dispatched them.
 Messages with the same `groupKey` (per project, environment, source and channel) form one
 group: the first one pushes, repeats update it calmly instead of buzzing again. Use one key
 per customer request (`requests/{$id}`), and a shared key only for repeats of the same problem
-(`queue/failed-jobs`). `problem`/`recovery` pairs need a `groupKey`.
+(`queue/failed-jobs`). `uhoh()` and its `phew()` share one.
 
 ## Sending
 
 ```php
-$client->send(Message|array $message, ?string $idempotencyKey = null): Accepted // id, duplicate, receivedAt
+$client->honk(Message|array $message, ?string $idempotencyKey = null): Accepted // id, duplicate, receivedAt
 ```
+
+`honk()`, `uhoh()` and `phew()` arrived in 0.3.0; `send`, `problem` and `recovery` still work
+and send exactly the same request.
 
 | Field (builder method) | Notes |
 |---|---|
@@ -294,8 +316,8 @@ Helpers (`$options` takes any field in camelCase plus `idempotencyKey`):
 ```php
 $client->loud('Disk 91%', '/var on app-01', ['groupKey' => 'disk/app-01/var']);
 $client->light($title, $message, $options);  $client->beep(...);  $client->long(...);  $client->blast(...);
-$client->problem('db/backup', 'Backup failed', 'pg_dump exited with 1');   // a long honk by default
-$client->recovery('db/backup', 'Backup OK', 'pg_dump finished in 41 s');   // a beep by default
+$client->uhoh('db/backup', 'Backup failed', 'pg_dump exited with 1');   // opens a problem; a long honk by default
+$client->phew('db/backup', 'Backup OK', 'pg_dump finished in 41 s');    // closes it; a beep by default
 ```
 
 ### Buttons (actions)
@@ -304,7 +326,7 @@ Up to three buttons on the message, in display order: reply to the customer, cal
 the order.
 
 ```php
-$client->send(Message::make('Ana Pop (Acme) asked for a quote: online shop, 40 products')
+$client->honk(Message::make('Ana Pop (Acme) asked for a quote: online shop, 40 products')
     ->title('New request: online shop quote')
     ->category('customers')
     ->groupKey('requests/4812')
@@ -378,7 +400,7 @@ use Honk\Exception\HonkException;
 use Honk\Exception\ValidationException;
 
 try {
-    $honk->send($message, "order-{$order->id}-failed");
+    $honk->honk($message, "order-{$order->id}-failed");
 } catch (ValidationException $e) {
     report($e); // a bug: $e->fields says what to fix
 } catch (HonkException $e) {
