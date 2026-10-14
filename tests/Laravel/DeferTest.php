@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\ValidationException;
-use HonkMe\Laravel\Facades\Honk;
+use Honk\Exception\ValidationException;
+use Honk\Laravel\Facades\Honk;
 use Illuminate\Support\Facades\Route;
 
 final class DeferTest extends TestCase

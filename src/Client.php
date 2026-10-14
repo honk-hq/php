@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 use DateTimeImmutable;
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\ConflictException;
-use HonkMe\Exception\HonkException;
-use HonkMe\Exception\NetworkException;
-use HonkMe\Exception\QuotaException;
-use HonkMe\Exception\ServerException;
-use HonkMe\Exception\TimeoutException;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Http\CurlTransport;
-use HonkMe\Http\Psr18Transport;
-use HonkMe\Http\Response;
-use HonkMe\Http\Transport;
-use HonkMe\Http\TransportException;
+use Honk\Exception\AuthException;
+use Honk\Exception\ConflictException;
+use Honk\Exception\HonkException;
+use Honk\Exception\NetworkException;
+use Honk\Exception\QuotaException;
+use Honk\Exception\ServerException;
+use Honk\Exception\TimeoutException;
+use Honk\Exception\ValidationException;
+use Honk\Http\CurlTransport;
+use Honk\Http\Psr18Transport;
+use Honk\Http\Response;
+use Honk\Http\Transport;
+use Honk\Http\TransportException;
 use InvalidArgumentException;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;

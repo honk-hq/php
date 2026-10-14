@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 /**
  * Severity, lowest to highest. Every case has a horn name on the Honk scale; the horn names are

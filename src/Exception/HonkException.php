@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Exception;
+namespace Honk\Exception;
 
 use RuntimeException;
 use Throwable;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 /**
  * Builds the messages behind the helper methods (problem, recovery, light … blast), so every

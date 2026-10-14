@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Events;
+namespace Honk\Laravel\Events;
 
-use HonkMe\Accepted;
-use HonkMe\Message;
+use Honk\Accepted;
+use Honk\Message;
 
 /** Honk accepted a message (202, possibly a duplicate). */
 final class HonkSent

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Exception;
+namespace Honk\Exception;
 
 /**
  * Attempts timed out until the deadline. The event may or may not have been stored; retrying

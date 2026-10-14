@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel;
+namespace Honk\Laravel;
 
 use DateInterval;
 use DateTimeInterface;
-use HonkMe\Accepted;
-use HonkMe\Client;
-use HonkMe\Exception\HonkException;
-use HonkMe\Helper;
-use HonkMe\Laravel\Events\HonkFailed;
-use HonkMe\Laravel\Events\HonkSent;
-use HonkMe\Laravel\Jobs\SendHonkMessage;
-use HonkMe\Laravel\Support\ContextMetadata;
-use HonkMe\Message;
-use HonkMe\Uuid;
-use HonkMe\Wire;
+use Honk\Accepted;
+use Honk\Client;
+use Honk\Exception\HonkException;
+use Honk\Helper;
+use Honk\Laravel\Events\HonkFailed;
+use Honk\Laravel\Events\HonkSent;
+use Honk\Laravel\Jobs\SendHonkMessage;
+use Honk\Laravel\Support\ContextMetadata;
+use Honk\Message;
+use Honk\Uuid;
+use Honk\Wire;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Container\Attributes\Singleton;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -67,7 +67,7 @@ class HonkManager
             $route instanceof Client => $route,
             is_string($route) => self::makeClient(['key' => $route] + $this->config),
             is_array($route) => self::makeClient(self::stringKeys($route) + $this->config),
-            default => throw new InvalidArgumentException('Honk: routeNotificationForHonk() must return null, false, an ingestion key, an array of config overrides or a HonkMe\Client'),
+            default => throw new InvalidArgumentException('Honk: routeNotificationForHonk() must return null, false, an ingestion key, an array of config overrides or a Honk\Client'),
         };
     }
 

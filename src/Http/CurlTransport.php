@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Http;
+namespace Honk\Http;
 
 use CurlHandle;
 

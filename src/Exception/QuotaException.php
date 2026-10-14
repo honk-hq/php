@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Exception;
+namespace Honk\Exception;
 
 /**
  * 429 after retries: quota_exceeded (the workspace's daily messages_per_day, until UTC midnight)

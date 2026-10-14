@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Unit;
+namespace Honk\Tests\Unit;
 
 use DateTimeImmutable;
-use HonkMe\Accepted;
-use HonkMe\Client;
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\ConflictException;
-use HonkMe\Exception\HonkException;
-use HonkMe\Exception\NetworkException;
-use HonkMe\Exception\QuotaException;
-use HonkMe\Exception\ServerException;
-use HonkMe\Exception\TimeoutException;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Message;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Accepted;
+use Honk\Client;
+use Honk\Exception\AuthException;
+use Honk\Exception\ConflictException;
+use Honk\Exception\HonkException;
+use Honk\Exception\NetworkException;
+use Honk\Exception\QuotaException;
+use Honk\Exception\ServerException;
+use Honk\Exception\TimeoutException;
+use Honk\Exception\ValidationException;
+use Honk\Message;
+use Honk\Tests\Support\MockServer;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

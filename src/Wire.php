@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use HonkMe\Exception\ValidationException;
+use Honk\Exception\ValidationException;
 
 /**
  * Turns a Message into the JSON body of POST /v1/messages and applies the cheap checks the

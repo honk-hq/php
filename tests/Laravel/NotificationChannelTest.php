@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Laravel\Notifications\HonkChannel;
-use HonkMe\Laravel\Notifications\HonkMessage;
-use HonkMe\Laravel\Notifications\ToHonk;
+use Honk\Laravel\Notifications\HonkChannel;
+use Honk\Laravel\Notifications\HonkMessage;
+use Honk\Laravel\Notifications\ToHonk;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\ChannelManager;
@@ -60,7 +60,7 @@ final class NotificationChannelTest extends TestCase
     public function testAnonymousNotifiableWithNullRouteUsesTheConfiguredKey(): void
     {
         NotificationFacade::route('honk', null)->notify(new CustomerRequested(9, 'A', 'B', 'C'));
-        $this->assertSame('Bearer ' . \HonkMe\Tests\Unit\ClientTest::KEY, $this->server->requests()[0]['headers']['authorization']);
+        $this->assertSame('Bearer ' . \Honk\Tests\Unit\ClientTest::KEY, $this->server->requests()[0]['headers']['authorization']);
     }
 
     public function testRouteCanSelectAnotherKeyOrSkip(): void
@@ -100,7 +100,7 @@ final class NotificationChannelTest extends TestCase
     public function testMissingToHonkIsALogicError(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('must implement HonkMe\\Laravel\\Notifications\\ToHonk');
+        $this->expectExceptionMessage('must implement Honk\\Laravel\\Notifications\\ToHonk');
         (new Owner())->notify(new WithoutToHonk());
     }
 }
