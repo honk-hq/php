@@ -26,11 +26,10 @@ final class TestCommand extends Command
 
             return self::INVALID;
         }
-        $name = config('app.name');
-        $app = is_string($name) && $name !== '' ? $name : 'Laravel';
+        // No app name: the push's subtitle already names the project (usually the same name)
         $text = $this->option('message');
-        $message = Message::make(is_string($text) && $text !== '' ? $text : "Test from {$app} (php artisan honk:test).")
-            ->title("Honk test · {$app}")
+        $message = Message::make(is_string($text) && $text !== '' ? $text : 'Sent with php artisan honk:test.')
+            ->title('Honk test')
             ->severity($severity)
             ->channel('honk-test');
 
