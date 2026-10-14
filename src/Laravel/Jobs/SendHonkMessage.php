@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Jobs;
+namespace Honk\Laravel\Jobs;
 
-use HonkMe\Exception\HonkException;
-use HonkMe\Exception\QuotaException;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Message;
+use Honk\Exception\HonkException;
+use Honk\Exception\QuotaException;
+use Honk\Laravel\HonkManager;
+use Honk\Message;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Attributes\Backoff;

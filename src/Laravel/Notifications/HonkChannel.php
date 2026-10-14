@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Notifications;
+namespace Honk\Laravel\Notifications;
 
-use HonkMe\Accepted;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Message;
+use Honk\Accepted;
+use Honk\Laravel\HonkManager;
+use Honk\Message;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Notifications\Notification;
 use LogicException;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel;
+namespace Honk\Laravel;
 
-use HonkMe\Helper;
-use HonkMe\Message;
+use Honk\Helper;
+use Honk\Message;
 
 /**
  * Returned by Honk::defer(): the same helpers, sent after the response via Laravel's defer().

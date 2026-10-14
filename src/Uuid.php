@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 /** UUIDv7 (RFC 9562) generator, used for automatic idempotency keys. */
 final class Uuid

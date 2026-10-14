@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Exceptions;
+namespace Honk\Laravel\Exceptions;
 
-use HonkMe\Exception\HonkException;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Testing\HonkFake;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\HonkException;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Testing\HonkFake;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Cache\RateLimiter;
 use Illuminate\Container\Attributes\Config;
 use Illuminate\Contracts\Container\Container;

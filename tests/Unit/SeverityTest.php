@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Unit;
+namespace Honk\Tests\Unit;
 
-use HonkMe\Client;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Message;
-use HonkMe\Severity;
-use HonkMe\Tests\Support\MockServer;
-use HonkMe\Wire;
+use Honk\Client;
+use Honk\Exception\ValidationException;
+use Honk\Message;
+use Honk\Severity;
+use Honk\Tests\Support\MockServer;
+use Honk\Wire;
 use PHPUnit\Framework\TestCase;
 use ValueError;
 

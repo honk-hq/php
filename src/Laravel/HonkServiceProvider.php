@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel;
+namespace Honk\Laravel;
 
-use HonkMe\Client;
-use HonkMe\Laravel\Console\InstallCommand;
-use HonkMe\Laravel\Console\TestCommand;
-use HonkMe\Laravel\Jobs\SendHonkMessage;
-use HonkMe\Laravel\Notifications\HonkChannel;
-use HonkMe\Laravel\Scheduling\ScheduleHonk;
+use Honk\Client;
+use Honk\Laravel\Console\InstallCommand;
+use Honk\Laravel\Console\TestCommand;
+use Honk\Laravel\Jobs\SendHonkMessage;
+use Honk\Laravel\Notifications\HonkChannel;
+use Honk\Laravel\Scheduling\ScheduleHonk;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Notifications\ChannelManager;

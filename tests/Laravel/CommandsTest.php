@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Client;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Client;
+use Honk\Tests\Support\MockServer;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 

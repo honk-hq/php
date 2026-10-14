@@ -1,7 +1,7 @@
-# honk-me/honk-me
+# honk/honk
 
 [![CI](https://github.com/honk-me/honk-php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-me/honk-php/actions/workflows/ci.yml)
-[![Packagist](https://img.shields.io/packagist/v/honk-me/honk-me)](https://packagist.org/packages/honk-me/honk-me)
+[![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
 Official PHP client for [Honk](https://honk-me.app), the inbox that turns events from your
 apps, scripts, cron jobs and CI into calm, grouped push notifications on your phone.
@@ -19,7 +19,7 @@ The ingestion key (`honk_…`) is a secret: keep it in `.env`, never in front-en
 ## Install
 
 ```sh
-composer require honk-me/honk-me
+composer require honk/honk
 ```
 
 Create a project and an ingestion key at [honk-me.app](https://honk-me.app). Its
@@ -28,7 +28,7 @@ Create a project and an ingestion key at [honk-me.app](https://honk-me.app). Its
 ## Quick start
 
 ```php
-use HonkMe\Client;
+use Honk\Client;
 
 $honk = new Client(url: getenv('HONK_URL'), key: getenv('HONK_KEY'));
 $honk->beep('Backup finished', 'nightly pg_dump took 42 s');
@@ -57,7 +57,7 @@ remain as synonyms; `Severity::parse('Blast')` returns `Severity::Critical`.
 ## Laravel 13
 
 ```sh
-composer require honk-me/honk-me
+composer require honk/honk
 php artisan honk:install      # publishes config/honk.php, adds HONK_URL / HONK_KEY to .env.example
 ```
 
@@ -87,8 +87,8 @@ Laravel 13's queue attributes set the retries:
 namespace App\Notifications;
 
 use App\Models\CustomerRequest;
-use HonkMe\Laravel\Notifications\HonkMessage;
-use HonkMe\Laravel\Notifications\ToHonk;
+use Honk\Laravel\Notifications\HonkMessage;
+use Honk\Laravel\Notifications\ToHonk;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -149,13 +149,13 @@ complete Laravel 13 + Inertia + Vue + Wayfinder app.
   `->url()` / `->imageUrl()` out or guard them with `str_starts_with($link, 'https://')`.
 - Routing: without `routeNotificationForHonk()` the configured key is used. Return another
   ingestion key, an array of config overrides (`['key' => …, 'defaults' => [...]]`), a
-  `HonkMe\Client`, or `false` to skip Honk for that notifiable.
+  `Honk\Client`, or `false` to skip Honk for that notifiable.
 
 ### Send now, after the response, or from the queue
 
 ```php
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Message;
+use Honk\Laravel\Facades\Honk;
+use Honk\Message;
 
 Honk::defer()->beep('New order', "{$order->email} paid {$order->total} €");   // after the response
 Honk::queue(Message::make('Imported 1 204 rows')->beep()->channel('imports'));   // a queued job
@@ -175,9 +175,9 @@ not later. `queue()` returns the job; the connection and queue come from
 ### Testing: `Honk::fake()`
 
 ```php
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Laravel\Facades\Honk;
+use Honk\Message;
+use Honk\Severity;
 
 Honk::fake();
 
@@ -246,11 +246,11 @@ dispatched them.
 
 ### Events and container
 
-- `HonkMe\Laravel\Events\HonkSent` (message, `Accepted`, idempotency key, `via`) and
+- `Honk\Laravel\Events\HonkSent` (message, `Accepted`, idempotency key, `via`) and
   `HonkFailed` (message, exception, idempotency key, `via`) fire for every send: `send`,
   `defer`, `queue` or `notification`.
 - `HonkManager` (the facade root) is a `#[Singleton]` that receives `#[Config('honk')]`; inject
-  it, or `HonkMe\Client`, anywhere. Config is read when Honk is first used.
+  it, or `Honk\Client`, anywhere. Config is read when Honk is first used.
 
 ## Grouping in three lines
 
@@ -360,7 +360,7 @@ still enforces the total deadline.
 
 ## Errors
 
-All exceptions extend `HonkMe\Exception\HonkException` and expose `status`, `errorCode`,
+All exceptions extend `Honk\Exception\HonkException` and expose `status`, `errorCode`,
 `requestId`, `idempotencyKey`, `attempts`, `retryAfter` and `isRetryable()`.
 
 | Exception | When | What to do |
@@ -374,8 +374,8 @@ All exceptions extend `HonkMe\Exception\HonkException` and expose `status`, `err
 | `ServerException` | `5xx` on every attempt | retry later, same key |
 
 ```php
-use HonkMe\Exception\HonkException;
-use HonkMe\Exception\ValidationException;
+use Honk\Exception\HonkException;
+use Honk\Exception\ValidationException;
 
 try {
     $honk->send($message, "order-{$order->id}-failed");
@@ -398,7 +398,7 @@ composer analyse              # PHPStan level max with Larastan
 HONK_URL=… HONK_KEY=… composer test:integration   # against a real server (use a test project's key)
 ```
 
-The version lives in `HonkMe\Client::VERSION` (also the User-Agent). Releases: push a tag
+The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: push a tag
 `vX.Y.Z` matching it; Packagist picks the tag up (see `CHANGELOG.md`).
 
 ## Links

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Client;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Notifications\HonkMessage;
+use Honk\Client;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Notifications\HonkMessage;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
 

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Scheduling;
+namespace Honk\Laravel\Scheduling;
 
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Laravel\HonkManager;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Contracts\Container\Container;

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Unit;
+namespace Honk\Tests\Unit;
 
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Psr7\HttpFactory;
-use HonkMe\Client;
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\NetworkException;
-use HonkMe\Exception\TimeoutException;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Client;
+use Honk\Exception\AuthException;
+use Honk\Exception\NetworkException;
+use Honk\Exception\TimeoutException;
+use Honk\Tests\Support\MockServer;
 use PHPUnit\Framework\TestCase;
 
 final class Psr18Test extends TestCase

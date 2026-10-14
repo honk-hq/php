@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Unit;
+namespace Honk\Tests\Unit;
 
 use DateTimeImmutable;
-use HonkMe\Client;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Message;
-use HonkMe\Uuid;
-use HonkMe\Wire;
+use Honk\Client;
+use Honk\Exception\ValidationException;
+use Honk\Message;
+use Honk\Uuid;
+use Honk\Wire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Message;
+use Honk\Laravel\Facades\Honk;
+use Honk\Message;
 use Illuminate\Support\Facades\Context;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 

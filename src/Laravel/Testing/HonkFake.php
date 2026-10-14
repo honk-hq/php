@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Testing;
+namespace Honk\Laravel\Testing;
 
 use DateTimeImmutable;
-use HonkMe\Accepted;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Jobs\SendHonkMessage;
-use HonkMe\Message;
-use HonkMe\Severity;
-use HonkMe\Wire;
+use Honk\Accepted;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Jobs\SendHonkMessage;
+use Honk\Message;
+use Honk\Severity;
+use Honk\Wire;
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert as PHPUnit;
 

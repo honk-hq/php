@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\NetworkException;
-use HonkMe\Laravel\Exceptions\ExceptionHonker;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\NetworkException;
+use Honk\Laravel\Exceptions\ExceptionHonker;
+use Honk\Laravel\Facades\Honk;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use LogicException;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
@@ -100,8 +100,8 @@ final class ExceptionReportingTest extends TestCase
     public function testFailuresWhileReportingAreSwallowed(): void
     {
         config(['honk.url' => 'http://127.0.0.1:1', 'honk.exceptions.mode' => 'sync', 'honk.deadline' => 1, 'honk.retries' => 0]);
-        app()->forgetInstance(\HonkMe\Laravel\HonkManager::class);
-        \Illuminate\Support\Facades\Facade::clearResolvedInstance(\HonkMe\Laravel\HonkManager::class);
+        app()->forgetInstance(\Honk\Laravel\HonkManager::class);
+        \Illuminate\Support\Facades\Facade::clearResolvedInstance(\Honk\Laravel\HonkManager::class);
         app()->forgetInstance(ExceptionHonker::class);
         $this->registerReporter();
         report(new RuntimeException('still fine'));
@@ -111,8 +111,8 @@ final class ExceptionReportingTest extends TestCase
     private function unconfigure(): void
     {
         config(['honk.url' => null, 'honk.key' => null]);
-        $this->app->forgetInstance(\HonkMe\Laravel\HonkManager::class);
-        \Illuminate\Support\Facades\Facade::clearResolvedInstance(\HonkMe\Laravel\HonkManager::class);
+        $this->app->forgetInstance(\Honk\Laravel\HonkManager::class);
+        \Illuminate\Support\Facades\Facade::clearResolvedInstance(\Honk\Laravel\HonkManager::class);
     }
 
     public function testUnconfiguredHonkIsANoOpForExceptions(): void

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Http;
+namespace Honk\Http;
 
 /** A raw HTTP answer. Header names are lower-case. */
 final class Response

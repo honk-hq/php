@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Http;
+namespace Honk\Http;
 
 /** Sends one POST. Implementations never follow redirects. */
 interface Transport

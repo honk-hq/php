@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\ValidationException;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Notifications\HonkMessage;
-use HonkMe\Laravel\Testing\HonkFake;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\ValidationException;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Notifications\HonkMessage;
+use Honk\Laravel\Testing\HonkFake;
+use Honk\Message;
+use Honk\Severity;
 use PHPUnit\Framework\AssertionFailedError;
 
 final class FakeTest extends TestCase

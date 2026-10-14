@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Tests\Laravel;
+namespace Honk\Tests\Laravel;
 
-use HonkMe\Exception\AuthException;
-use HonkMe\Exception\ServerException;
-use HonkMe\Exception\ValidationException;
-use HonkMe\Laravel\Facades\Honk;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Laravel\Jobs\SendHonkMessage;
-use HonkMe\Laravel\Notifications\HonkMessage;
-use HonkMe\Tests\Support\MockServer;
+use Honk\Exception\AuthException;
+use Honk\Exception\ServerException;
+use Honk\Exception\ValidationException;
+use Honk\Laravel\Facades\Honk;
+use Honk\Laravel\HonkManager;
+use Honk\Laravel\Jobs\SendHonkMessage;
+use Honk\Laravel\Notifications\HonkMessage;
+use Honk\Tests\Support\MockServer;
 use Illuminate\Support\Facades\Queue;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 

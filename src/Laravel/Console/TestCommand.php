@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace HonkMe\Laravel\Console;
+namespace Honk\Laravel\Console;
 
-use HonkMe\Exception\HonkException;
-use HonkMe\Laravel\HonkManager;
-use HonkMe\Message;
-use HonkMe\Severity;
+use Honk\Exception\HonkException;
+use Honk\Laravel\HonkManager;
+use Honk\Message;
+use Honk\Severity;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace HonkMe;
+namespace Honk;
 
 use DateTimeImmutable;
 
