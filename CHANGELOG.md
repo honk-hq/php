@@ -4,6 +4,13 @@ All notable changes to `honk-me/honk-me` (Composer) are documented here. The for
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-10-14
+
+### Changed
+- `php artisan honk:test` sends the title "Honk test" and, without `--message`, the text
+  "Sent with php artisan honk:test.". The app's name is gone from both: the push's subtitle
+  already names the project, so a project called like the app showed its name twice.
+
 ## [0.2.0] - 2026-10-07
 
 ### Added

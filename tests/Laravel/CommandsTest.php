@@ -37,6 +37,9 @@ final class CommandsTest extends TestCase
         $body = json_decode($this->server->requests()[0]['body'], true);
         $this->assertSame('info', $body['severity']);
         $this->assertSame('honk-test', $body['channel']);
+        // the push's subtitle names the project: the title and text don't repeat the app's name
+        $this->assertSame('Honk test', $body['title']);
+        $this->assertSame('Sent with php artisan honk:test.', $body['message']);
     }
 
     public function testTestCommandReportsFailures(): void
