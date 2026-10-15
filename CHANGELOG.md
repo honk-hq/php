@@ -7,7 +7,7 @@ project uses [Semantic Versioning](https://semver.org/).
 ## [0.3.1] - 2026-10-15
 
 ### Changed
-- The repository is now github.com/honkhonk/php, and the User-Agent is `honk-php/<version>`.
+- The repository is now github.com/honk-hq/php, and the User-Agent is `honk-php/<version>`.
 
 ## [0.3.0] - 2026-10-14
 

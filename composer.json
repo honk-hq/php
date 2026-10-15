@@ -15,10 +15,10 @@
         "monitoring",
         "sdk"
     ],
-    "homepage": "https://github.com/honkhonk/php",
+    "homepage": "https://github.com/honk-hq/php",
     "support": {
-        "issues": "https://github.com/honkhonk/php/issues",
-        "source": "https://github.com/honkhonk/php"
+        "issues": "https://github.com/honk-hq/php/issues",
+        "source": "https://github.com/honk-hq/php"
     },
     "authors": [
         {

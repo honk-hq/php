@@ -1,6 +1,6 @@
 # honk/honk
 
-[![CI](https://github.com/honkhonk/php/actions/workflows/ci.yml/badge.svg)](https://github.com/honkhonk/php/actions/workflows/ci.yml)
+[![CI](https://github.com/honk-hq/php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-hq/php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
 Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-honk.app),
@@ -425,8 +425,8 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 ## Links
 
 - [honk-honk.app](https://honk-honk.app): the Honk inbox (web, iPhone).
-- Other SDKs: [Node.js](https://github.com/honkhonk/node),
-  [Go + CLI](https://github.com/honkhonk/go), [Swift](https://github.com/honkhonk/honk-swift),
-  [Kotlin / Java](https://github.com/honkhonk/kotlin).
+- Other SDKs: [Node.js](https://github.com/honk-hq/node),
+  [Go + CLI](https://github.com/honk-hq/go), [Swift](https://github.com/honk-hq/honk-swift),
+  [Kotlin / Java](https://github.com/honk-hq/kotlin).
 
 MIT License.
