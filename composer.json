@@ -1,6 +1,6 @@
 {
     "name": "honk/honk",
-    "description": "Official PHP client for Honk (honk-me.app): send events from apps, scripts and automations to your phone. Laravel facade, queued sends and notification channel included.",
+    "description": "Official PHP client for Honk (honk-honk.app): send events from apps, scripts and automations to your phone. Laravel facade, queued sends and notification channel included.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -23,7 +23,7 @@
     "authors": [
         {
             "name": "Honk contributors",
-            "homepage": "https://honk-me.app"
+            "homepage": "https://honk-honk.app"
         }
     ],
     "require": {

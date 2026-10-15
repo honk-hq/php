@@ -3,7 +3,7 @@
 [![CI](https://github.com/honk-me/honk-php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-me/honk-php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
-Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-me.app),
+Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-honk.app),
 the inbox that turns events from apps, scripts, cron jobs and CI into calm, grouped push
 notifications. It works in any PHP 8.3 app and comes with a full Laravel 13 integration.
 
@@ -47,7 +47,7 @@ The ingestion key (`honk_…`) is a secret: keep it in `.env`, never in front-en
 composer require honk/honk
 ```
 
-Create a project and an ingestion key at [honk-me.app](https://honk-me.app). Its
+Create a project and an ingestion key at [honk-honk.app](https://honk-honk.app). Its
 *Integrations* page generates ready-to-paste code for plain PHP and Laravel.
 
 `Client::fromEnv()` reads `HONK_URL`, `HONK_KEY` and the optional `HONK_SOURCE`,
@@ -432,7 +432,7 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 
 ## Links
 
-- [honk-me.app](https://honk-me.app): the Honk inbox (web, iPhone).
+- [honk-honk.app](https://honk-honk.app): the Honk inbox (web, iPhone).
 - Other SDKs: [Node.js](https://github.com/honk-me/honk-node),
   [Go + CLI](https://github.com/honk-me/honk-go), [Swift](https://github.com/honk-me/honk-swift),
   [Kotlin / Java](https://github.com/honk-me/honk-kotlin).
