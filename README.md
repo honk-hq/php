@@ -426,7 +426,7 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 
 - [honk-honk.app](https://honk-honk.app): the Honk inbox (web, iPhone).
 - Other SDKs: [Node.js](https://github.com/honkhonk/node),
-  [Go + CLI](https://github.com/honkhonk/go), [Swift](https://github.com/honkhonk/swift),
+  [Go + CLI](https://github.com/honkhonk/go), [Swift](https://github.com/honkhonk/honk-swift),
   [Kotlin / Java](https://github.com/honkhonk/kotlin).
 
 MIT License.
