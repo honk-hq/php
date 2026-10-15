@@ -29,7 +29,7 @@ final class ServiceProviderTest extends TestCase
         $res = Honk::send(HonkMessage::make('Ana asked for a quote')->title('New request')->priority('high'));
         $this->assertSame('msg_01k6h3w4z5x6y7z8a9b0c1d2e3', $res->id);
         $this->assertSame(['title' => 'New request', 'message' => 'Ana asked for a quote', 'priority' => 'high', 'source' => 'laravel', 'environment' => 'testing'], $this->lastBody());
-        $this->assertStringStartsWith('honk-me-php/' . Client::VERSION . ' laravel', $this->server->requests()[0]['headers']['user-agent']);
+        $this->assertStringStartsWith('honk-php/' . Client::VERSION . ' laravel', $this->server->requests()[0]['headers']['user-agent']);
     }
 
     public function testHelpersThroughTheFacade(): void

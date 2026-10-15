@@ -70,7 +70,7 @@ final class ClientTest extends TestCase
         $this->assertSame('/v1/messages', $r['path']);
         $this->assertSame('Bearer ' . self::KEY, $r['headers']['authorization']);
         $this->assertSame('application/json', $r['headers']['content-type']);
-        $this->assertSame('honk-me-php/' . Client::VERSION, $r['headers']['user-agent']);
+        $this->assertSame('honk-php/' . Client::VERSION, $r['headers']['user-agent']);
         $this->assertMatchesRegularExpression(self::UUIDV7, $r['headers']['idempotency-key']);
         $this->assertArrayNotHasKey('expect', $r['headers']);
         $this->assertSame([

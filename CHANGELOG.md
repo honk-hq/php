@@ -4,6 +4,11 @@ All notable changes to `honk/honk` (Composer; `honk-me/honk-me` until 0.2.1) are
 here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] - 2026-10-15
+
+### Changed
+- The repository is now github.com/honkhonk/php, and the User-Agent is `honk-php/<version>`.
+
 ## [0.3.0] - 2026-10-14
 
 ### Changed

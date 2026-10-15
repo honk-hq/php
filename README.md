@@ -1,6 +1,6 @@
 # honk/honk
 
-[![CI](https://github.com/honk-me/honk-php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-me/honk-php/actions/workflows/ci.yml)
+[![CI](https://github.com/honkhonk/php/actions/workflows/ci.yml/badge.svg)](https://github.com/honkhonk/php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
 Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-honk.app),
@@ -52,15 +52,7 @@ Create a project and an ingestion key at [honk-honk.app](https://honk-honk.app).
 
 `Client::fromEnv()` reads `HONK_URL`, `HONK_KEY` and the optional `HONK_SOURCE`,
 `HONK_ENVIRONMENT` and `HONK_CHANNEL` defaults; `new Client(url: …, key: …)` takes them
-directly (see [Options](#options)). Coming from `honk-me/honk-me`: the package and the namespace
-were renamed in 0.3.0. Add the new one before removing the old one, so your app keeps booting in
-between:
-
-```sh
-composer require honk/honk
-# replace HonkMe\ with Honk\ in your code
-composer remove honk-me/honk-me
-```
+directly (see [Options](#options)).
 
 ## The Honk scale
 
@@ -433,8 +425,8 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 ## Links
 
 - [honk-honk.app](https://honk-honk.app): the Honk inbox (web, iPhone).
-- Other SDKs: [Node.js](https://github.com/honk-me/honk-node),
-  [Go + CLI](https://github.com/honk-me/honk-go), [Swift](https://github.com/honk-me/honk-swift),
-  [Kotlin / Java](https://github.com/honk-me/honk-kotlin).
+- Other SDKs: [Node.js](https://github.com/honkhonk/node),
+  [Go + CLI](https://github.com/honkhonk/go), [Swift](https://github.com/honkhonk/swift),
+  [Kotlin / Java](https://github.com/honkhonk/kotlin).
 
 MIT License.

@@ -32,7 +32,7 @@ use Psr\Http\Message\StreamFactoryInterface;
  */
 final class Client
 {
-    public const VERSION = '0.3.0';
+    public const VERSION = '0.3.1';
 
     private readonly string $url;
     private readonly string $key;
@@ -88,7 +88,7 @@ final class Client
             throw new InvalidArgumentException('Honk: timeoutMs, deadlineMs and backoff must be positive, retries ≥ 0');
         }
         $this->defaults = array_intersect_key($defaults, ['source' => 1, 'environment' => 1, 'channel' => 1]);
-        $this->userAgent = 'honk-me-php/' . self::VERSION . ($userAgent ? ' ' . $userAgent : '');
+        $this->userAgent = 'honk-php/' . self::VERSION . ($userAgent ? ' ' . $userAgent : '');
         $this->transport = $transport ?? self::makeTransport($httpClient, $requestFactory, $streamFactory);
     }
 

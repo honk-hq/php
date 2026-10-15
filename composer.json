@@ -5,7 +5,7 @@
     "license": "MIT",
     "keywords": [
         "honk",
-        "honk-me",
+        "honk-honk",
         "notifications",
         "push",
         "push-notifications",
@@ -15,10 +15,10 @@
         "monitoring",
         "sdk"
     ],
-    "homepage": "https://github.com/honk-me/honk-php",
+    "homepage": "https://github.com/honkhonk/php",
     "support": {
-        "issues": "https://github.com/honk-me/honk-php/issues",
-        "source": "https://github.com/honk-me/honk-php"
+        "issues": "https://github.com/honkhonk/php/issues",
+        "source": "https://github.com/honkhonk/php"
     },
     "authors": [
         {
