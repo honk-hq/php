@@ -10,13 +10,13 @@ use Honk\Exception\ValidationException;
 /**
  * Fluent builder for one Honk event. Only the message text is required.
  *
- *     Message::make('Ana (Acme) asked for a quote')
+ *     Message::make('Maria (Acme) asked for a quote')
  *         ->title('New request')
  *         ->priority('high')
  *         ->category('customers')
  *         ->groupKey('requests/4812')
  *         ->url('https://shop.example.com/admin/requests/4812')
- *         ->action('Reply', 'mailto:ana@acme.example?subject=Your%20quote');
+ *         ->action('Reply', 'mailto:maria@acme.example?subject=Your%20quote');
  *
  * Fields mirror POST /v1/messages in camelCase (groupKey → group_key). Null fields are omitted.
  */
@@ -357,7 +357,7 @@ class Message
      * Adds a button (at most 3, in display order; the first is the primary). Honk never opens the
      * URL; the app does when the button is tapped.
      *
-     * @param string $title 1–40 characters, one line, shown as sent: "Reply", "Call Ana"
+     * @param string $title 1–40 characters, one line, shown as sent: "Reply", "Call Maria"
      * @param string $url   https:// (no credentials), mailto: with one address (?subject=…&body=…
      *                      percent-encoded, no other keys), tel: or sms: with a number (sms: also
      *                      ?body=…); at most 2048 bytes, no spaces

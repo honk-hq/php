@@ -325,12 +325,12 @@ Up to three buttons on the message, in display order: reply to the customer, cal
 the order.
 
 ```php
-$client->honk(Message::make('Ana Pop (Acme) asked for a quote: online shop, 40 products')
+$client->honk(Message::make('Maria Tudor (Acme) asked for a quote: online shop, 40 products')
     ->title('New request: online shop quote')
     ->category('customers')
     ->groupKey('requests/4812')
-    ->action('Reply', 'mailto:ana@acme.example?subject=' . rawurlencode('Your quote'))
-    ->action('Call Ana', 'tel:+15550134'));
+    ->action('Reply', 'mailto:maria@acme.example?subject=' . rawurlencode('Your quote'))
+    ->action('Call Maria', 'tel:+15550134'));
 ```
 
 - `title`: 1–40 characters, one line, shown as sent.
@@ -342,7 +342,7 @@ $client->honk(Message::make('Ana Pop (Acme) asked for a quote: online shop, 40 p
   message in the app and the web inbox, and on iPhone notifications that show the message
   text. Errors name the button: `actions[1].url`.
 - The same works in `toHonk()` (`HonkMessage::create()->action(…)`), in arrays
-  (`'actions' => [['title' => 'Call Ana', 'url' => 'tel:+15550134']]`), with `Honk::queue()`
+  (`'actions' => [['title' => 'Call Maria', 'url' => 'tel:+15550134']]`), with `Honk::queue()`
   and `Honk::defer()`. `->actions([...])` replaces the list.
 
 ### Options
