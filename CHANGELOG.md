@@ -6,6 +6,8 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-18
+
 ### Changed
 - The README, the Composer description and `php artisan honk:test` call the product
   Honk! Honk!; the test message's title is now "Test message". The package, the namespace and
