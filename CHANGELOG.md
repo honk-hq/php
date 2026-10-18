@@ -4,6 +4,13 @@ All notable changes to `honk/honk` (Composer; `honk-me/honk-me` until 0.2.1) are
 here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- The README, the Composer description and `php artisan honk:test` call the product
+  Honk! Honk!; the test message's title is now "Test message". The package, the namespace and
+  the API are unchanged.
+
 ## [0.3.1] - 2026-10-15
 
 ### Changed

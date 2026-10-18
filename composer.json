@@ -1,6 +1,6 @@
 {
     "name": "honk/honk",
-    "description": "Official PHP client for Honk (honk-honk.app): send events from apps, scripts and automations to your phone. Laravel facade, queued sends and notification channel included.",
+    "description": "Official PHP client for Honk! Honk! (honk-honk.app): send events from apps, scripts and automations to your phone. Laravel facade, queued sends and notification channel included.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -40,7 +40,7 @@
         "phpunit/phpunit": "^12.0"
     },
     "suggest": {
-        "ext-curl": "Used by default to talk to Honk (or pass any PSR-18 client).",
+        "ext-curl": "Used by default to talk to Honk! Honk! (or pass any PSR-18 client).",
         "laravel/framework": "Facade, Honk::fake(), queue/defer sends, the notification channel, exception reporting and scheduler hooks (Laravel 13)."
     },
     "conflict": {

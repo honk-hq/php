@@ -3,7 +3,7 @@
 [![CI](https://github.com/honk-hq/php/actions/workflows/ci.yml/badge.svg)](https://github.com/honk-hq/php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/honk/honk)](https://packagist.org/packages/honk/honk)
 
-Your PHP app honks, your phone buzzes. The official PHP client for [Honk](https://honk-honk.app),
+Your PHP app honks, your phone buzzes. The official PHP client for [Honk! Honk!](https://honk-honk.app),
 the inbox that turns events from apps, scripts, cron jobs and CI into calm, grouped push
 notifications. It works in any PHP 8.3 app and comes with a full Laravel 13 integration.
 
@@ -157,16 +157,16 @@ Notification::route('honk', null)->notify(new CustomerRequested($request)); // o
 
 The phone buzzes once per request, follow-ups for the same request update the same group, and
 queue retries never create duplicates: the idempotency key is `notification-{id}`, which
-Laravel keeps across retries. `examples/laravel-app` in the Honk repository is this recipe as a
+Laravel keeps across retries. `examples/laravel-app` in the Honk! Honk! repository is this recipe as a
 complete Laravel 13 + Inertia + Vue + Wayfinder app.
 
 - Keep `toHonk()` deterministic (no `now()`; use `$r->created_at`): a queued retry must send the
-  same payload, otherwise Honk answers `409 idempotency_conflict`.
+  same payload, otherwise Honk! Honk! answers `409 idempotency_conflict`.
 - Links and images must be `https://`. With `APP_URL=http://localhost` in development, leave
   `->url()` / `->imageUrl()` out or guard them with `str_starts_with($link, 'https://')`.
 - Routing: without `routeNotificationForHonk()` the configured key is used. Return another
   ingestion key, an array of config overrides (`['key' => …, 'defaults' => [...]]`), a
-  `Honk\Client`, or `false` to skip Honk for that notifiable.
+  `Honk\Client`, or `false` to skip Honk! Honk! for that notifiable.
 
 ### Send now, after the response, or from the queue
 
@@ -229,7 +229,7 @@ Every reported exception becomes a long honk: a *problem* whose `group_key` is
 one honk per group per 5 minutes (`honk.exceptions.throttle`, cache-backed), sent after the
 response (`honk.exceptions.mode`: `defer`, `sync` or `queue`). Pick another severity or window
 per app: `Honk::reportable(severity: 'blast', throttleSeconds: 60)`; list classes to skip in
-`honk.exceptions.ignore`. It never honks about Honk's own failures, does nothing while
+`honk.exceptions.ignore`. It never honks about the SDK's own failures, does nothing while
 `HONK_URL` / `HONK_KEY` are missing (local development, CI), and never throws. Exception
 messages are sent as they are (truncated): do not put personal data in them.
 
@@ -268,7 +268,7 @@ dispatched them.
   `HonkFailed` (message, exception, idempotency key, `via`) fire for every message; `via` is
   `'send'` (sent right away), `'defer'`, `'queue'` or `'notification'`.
 - `HonkManager` (the facade root) is a `#[Singleton]` that receives `#[Config('honk')]`; inject
-  it, or `Honk\Client`, anywhere. Config is read when Honk is first used.
+  it, or `Honk\Client`, anywhere. Config is read when Honk! Honk! is first used.
 
 ## Grouping in three lines
 
@@ -307,7 +307,7 @@ and send exactly the same request.
 
 Arrays use the same camelCase keys (`['message' => …, 'groupKey' => …]`); snake_case keys
 are rejected with a hint. Null and empty optional fields (and empty `actions`) are omitted. A
-returned `Accepted` means Honk **durably stored** the message (`202`), not that a push was
+returned `Accepted` means Honk! Honk! **durably stored** the message (`202`), not that a push was
 delivered or read.
 
 Helpers (`$options` takes any field in camelCase plus `idempotencyKey`):
@@ -338,7 +338,7 @@ $client->honk(Message::make('Maria Tudor (Acme) asked for a quote: online shop, 
   address and optionally `?subject=…&body=…` (percent-encoded with `rawurlencode()`, no other
   keys); `tel:` with a number (digits, `-` `.` `(` `)`, `+` only first); `sms:` with a number
   and optionally `?body=…`. Other schemes are refused.
-- Honk never opens or fetches them; the app does when you tap one. They appear on the
+- Honk! Honk! never opens or fetches them; the app does when you tap one. They appear on the
   message in the app and the web inbox, and on iPhone notifications that show the message
   text. Errors name the button: `actions[1].url`.
 - The same works in `toHonk()` (`HonkMessage::create()->action(…)`), in arrays
@@ -367,7 +367,7 @@ still enforces the total deadline.
 ## Retries and idempotency, guaranteed
 
 - Every send carries an `Idempotency-Key`: yours, or a fresh UUIDv7. **The same key is reused
-  on every retry.** Within 24 h Honk answers a replay with the original id and
+  on every retry.** Within 24 h Honk! Honk! answers a replay with the original id and
   `duplicate: true`, so a lost response never creates a second message.
 - Only network errors, timeouts, `429` and `5xx` are retried, with exponential backoff and
   full jitter (`random(0, min(8 s, 0.5 s·2ⁿ))`), never sooner than the server's `Retry-After`.
@@ -424,7 +424,7 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 
 ## Links
 
-- [honk-honk.app](https://honk-honk.app): the Honk inbox (web, iPhone).
+- [honk-honk.app](https://honk-honk.app): the Honk! Honk! inbox (web, iPhone).
 - Other SDKs: [Node.js](https://github.com/honk-hq/node),
   [Go + CLI](https://github.com/honk-hq/go), [Swift](https://github.com/honk-hq/honk-swift),
   [Kotlin / Java](https://github.com/honk-hq/kotlin).

@@ -14,7 +14,7 @@ use Illuminate\Console\Command;
 use InvalidArgumentException;
 
 #[Signature('honk:test {--severity=light : Horn or canonical severity} {--message= : Message text}')]
-#[Description('Send a test message to Honk and print the result')]
+#[Description('Send a test message to Honk! Honk! and print the result')]
 final class TestCommand extends Command
 {
     public function handle(HonkManager $honk): int
@@ -29,7 +29,7 @@ final class TestCommand extends Command
         // No app name: the push's subtitle already names the project (usually the same name)
         $text = $this->option('message');
         $message = Message::make(is_string($text) && $text !== '' ? $text : 'Honk! Honk! Your phone and your app are on speaking terms.')
-            ->title('Honk test')
+            ->title('Test message')
             ->severity($severity)
             ->channel('honk-test');
 

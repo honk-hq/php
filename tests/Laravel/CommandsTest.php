@@ -38,7 +38,7 @@ final class CommandsTest extends TestCase
         $this->assertSame('info', $body['severity']);
         $this->assertSame('honk-test', $body['channel']);
         // the push's subtitle names the project: the title and text don't repeat the app's name
-        $this->assertSame('Honk test', $body['title']);
+        $this->assertSame('Test message', $body['title']);
         $this->assertSame('Honk! Honk! Your phone and your app are on speaking terms.', $body['message']);
     }
 
