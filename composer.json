@@ -65,9 +65,6 @@
             "aliases": {
                 "Honk": "Honk\\Laravel\\Facades\\Honk"
             }
-        },
-        "branch-alias": {
-            "dev-main": "0.1.x-dev"
         }
     },
     "scripts": {
