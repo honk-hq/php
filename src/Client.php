@@ -229,7 +229,7 @@ final class Client
     }
 
     /**
-     * A light honk (severity info).
+     * A Light message (severity info).
      *
      * @param array<string, mixed> $options
      */
@@ -239,7 +239,7 @@ final class Client
     }
 
     /**
-     * A beep-beep (severity success).
+     * A Beep message (severity success).
      *
      * @param array<string, mixed> $options
      */
@@ -249,7 +249,7 @@ final class Client
     }
 
     /**
-     * A loud honk (severity warning).
+     * A Loud message (severity warning).
      *
      * @param array<string, mixed> $options
      */
@@ -259,7 +259,7 @@ final class Client
     }
 
     /**
-     * A long honk (severity error; pushes at least as high priority).
+     * A Long message (severity error; pushes at least as high priority).
      *
      * @param array<string, mixed> $options
      */
@@ -269,7 +269,7 @@ final class Client
     }
 
     /**
-     * A blast (severity critical; pushes at least as high priority).
+     * A Blast message (severity critical; pushes at least as high priority).
      *
      * @param array<string, mixed> $options
      */

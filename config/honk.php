@@ -52,7 +52,7 @@ return [
     ],
 
     /*
-    | $exceptions->report(Honk::reportable()) in bootstrap/app.php: one long honk (a problem,
+    | $exceptions->report(Honk::reportable()) in bootstrap/app.php: one Long message (a problem,
     | grouped per exception class and location) at most every `throttle` seconds per group.
     | mode: defer (after the response), sync, or queue.
     */

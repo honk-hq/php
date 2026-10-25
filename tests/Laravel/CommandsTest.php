@@ -33,7 +33,7 @@ final class CommandsTest extends TestCase
 
     public function testTestCommandSendsALightHonk(): void
     {
-        $this->artisan('honk:test')->assertSuccessful()->expectsOutputToContain('Accepted msg_01k6h3w4z5x6y7z8a9b0c1d2e3 (light honk)');
+        $this->artisan('honk:test')->assertSuccessful()->expectsOutputToContain('Accepted msg_01k6h3w4z5x6y7z8a9b0c1d2e3 (Light)');
         $body = json_decode($this->server->requests()[0]['body'], true);
         $this->assertSame('info', $body['severity']);
         $this->assertSame('honk-test', $body['channel']);

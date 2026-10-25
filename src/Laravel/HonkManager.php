@@ -172,7 +172,7 @@ class HonkManager
     }
 
     /**
-     * A problem for $groupKey (opens or continues its incident); a long honk unless
+     * A problem for $groupKey (opens or continues its incident); a Long message unless
      * $options['severity'] says otherwise.
      *
      * @param array<string, mixed> $options
@@ -193,7 +193,7 @@ class HonkManager
     }
 
     /**
-     * A recovery for $groupKey (closes its open incident); a beep unless $options['severity']
+     * A recovery for $groupKey (closes its open incident); a Beep message unless $options['severity']
      * says otherwise.
      *
      * @param array<string, mixed> $options
@@ -214,7 +214,7 @@ class HonkManager
     }
 
     /**
-     * A light honk (info).
+     * A Light message (info).
      *
      * @param array<string, mixed> $options
      */
@@ -224,7 +224,7 @@ class HonkManager
     }
 
     /**
-     * A beep-beep (success).
+     * A Beep message (success).
      *
      * @param array<string, mixed> $options
      */
@@ -234,7 +234,7 @@ class HonkManager
     }
 
     /**
-     * A loud honk (warning).
+     * A Loud message (warning).
      *
      * @param array<string, mixed> $options
      */
@@ -244,7 +244,7 @@ class HonkManager
     }
 
     /**
-     * A long honk (error).
+     * A Long message (error).
      *
      * @param array<string, mixed> $options
      */
@@ -254,7 +254,7 @@ class HonkManager
     }
 
     /**
-     * A blast (critical).
+     * A Blast message (critical).
      *
      * @param array<string, mixed> $options
      */

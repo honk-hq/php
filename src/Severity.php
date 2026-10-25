@@ -19,13 +19,13 @@ enum Severity: string
     case Error = 'error';
     case Critical = 'critical';
 
-    /** Light honk. */
+    /** Light. */
     public const Light = self::Info;
-    /** Beep-beep. */
+    /** Beep. */
     public const Beep = self::Success;
-    /** Loud honk. */
+    /** Loud. */
     public const Loud = self::Warning;
-    /** Long honk (pushes at least as high priority). */
+    /** Long (pushes at least as high priority). */
     public const Long = self::Error;
     /** Blast (pushes at least as high priority). */
     public const Blast = self::Critical;

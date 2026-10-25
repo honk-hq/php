@@ -209,31 +209,31 @@ class Message
         return $this;
     }
 
-    /** A light honk (info). */
+    /** A Light message (info). */
     public function light(): static
     {
         return $this->severity(Severity::Info);
     }
 
-    /** A beep-beep (success). */
+    /** A Beep message (success). */
     public function beep(): static
     {
         return $this->severity(Severity::Success);
     }
 
-    /** A loud honk (warning). */
+    /** A Loud message (warning). */
     public function loud(): static
     {
         return $this->severity(Severity::Warning);
     }
 
-    /** A long honk (error). */
+    /** A Long message (error). */
     public function long(): static
     {
         return $this->severity(Severity::Error);
     }
 
-    /** A blast (critical). */
+    /** A Blast message (critical). */
     public function blast(): static
     {
         return $this->severity(Severity::Critical);

@@ -48,7 +48,7 @@ final class TestCommand extends Command
             return self::FAILURE;
         }
 
-        $this->components->info(sprintf('Accepted %s (%s honk%s).', $accepted->id, $severity->horn(), $accepted->duplicate ? ', duplicate' : ''));
+        $this->components->info(sprintf('Accepted %s (%s%s).', $accepted->id, ucfirst($severity->horn()), $accepted->duplicate ? ', duplicate' : ''));
 
         return self::SUCCESS;
     }

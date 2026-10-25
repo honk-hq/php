@@ -58,7 +58,7 @@ final class Honk extends Facade
     }
 
     /**
-     * A report callback for bootstrap/app.php: honks a long honk (a problem grouped per
+     * A report callback for bootstrap/app.php: honks a Long message (a problem grouped per
      * exception class and location, throttled) for every reported exception.
      *
      *     ->withExceptions(function (Exceptions $exceptions): void {

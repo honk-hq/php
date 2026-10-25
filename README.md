@@ -56,15 +56,18 @@ directly (see [Options](#options)).
 
 ## The Honk scale
 
-Every severity has a horn name. Use either; the SDK always sends the canonical value.
+Five levels. The Honk app shows them by their standard names (Info, Success, Warning, Error,
+Critical); people who prefer horn sounds can switch on the Honk names (Light, Beep, Loud, Long,
+Blast) with the "Honk names for levels" switch in Settings. The SDK takes both: the canonical values and the
+Honk names as input aliases, in any case, and always sends the canonical value.
 
-| Horn | Severity | Client / facade | Builder | Enum |
-|---|---|---|---|---|
-| light honk | `light` (info) | `light($title, $message, $options)` | `->light()` | `Severity::Light` |
-| beep-beep | `beep` (success) | `beep(…)` | `->beep()` | `Severity::Beep` |
-| loud honk | `loud` (warning) | `loud(…)` | `->loud()` | `Severity::Loud` |
-| long honk | `long` (error) | `long(…)` | `->long()` | `Severity::Long` |
-| blast | `blast` (critical) | `blast(…)` | `->blast()` | `Severity::Blast` |
+| Level | Honk name | Severity | Client / facade | Builder | Enum |
+|---|---|---|---|---|---|
+| Info | Light | `light` (info) | `light($title, $message, $options)` | `->light()` | `Severity::Light` |
+| Success | Beep | `beep` (success) | `beep(…)` | `->beep()` | `Severity::Beep` |
+| Warning | Loud | `loud` (warning) | `loud(…)` | `->loud()` | `Severity::Loud` |
+| Error | Long | `long` (error) | `long(…)` | `->long()` | `Severity::Long` |
+| Critical | Blast | `blast` (critical) | `blast(…)` | `->blast()` | `Severity::Blast` |
 
 `->severity('loud')`, `'LOUD'`, `'warning'` and `Severity::Loud` (which *is*
 `Severity::Warning`) are the same event, also for idempotency. `long` and `blast` push at
@@ -87,7 +90,7 @@ HONK_KEY=honk_xxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 ```sh
-php artisan honk:test         # sends a light honk and prints the message id
+php artisan honk:test         # sends a Light test message and prints its id
 php artisan about --only=honk # URL, key prefix (never the secret), queue, Context metadata
 ```
 
@@ -137,7 +140,7 @@ class CustomerRequested extends Notification implements ShouldQueue, ToHonk
             ->title(Str::limit("New request: {$r->subject}", 150))
             ->line("{$r->name} ({$r->company})")
             ->line(Str::limit($r->body, 2000))       // message: ≤ 8192 bytes
-            ->light()                                // a light honk (info)
+            ->light()                                // a Light message (info)
             ->category('customers')
             ->groupKey("requests/{$r->id}")          // one group per request
             ->occurredAt($r->created_at)
@@ -224,7 +227,7 @@ One line in `bootstrap/app.php`:
 })
 ```
 
-Every reported exception becomes a long honk: a *problem* whose `group_key` is
+Every reported exception becomes a Long message: a *problem* whose `group_key` is
 `exceptions/<Class>@<file>:<line>`, so repeats of one failure are a single incident. At most
 one honk per group per 5 minutes (`honk.exceptions.throttle`, cache-backed), sent after the
 response (`honk.exceptions.mode`: `defer`, `sync` or `queue`). Pick another severity or window
@@ -238,7 +241,7 @@ messages are sent as they are (truncated): do not put personal data in them.
 ```php
 // routes/console.php
 Schedule::command('backup:run')->daily()->honkOnFailure();          // problem on failure, recovery once it works again
-Schedule::command('reports:send')->hourly()->honkOnSuccess();       // a beep after every successful run
+Schedule::command('reports:send')->hourly()->honkOnSuccess();       // a Beep message after every successful run
 ```
 
 `honkOnFailure(?string $groupKey = null, string $severity = 'long')` sends a problem with the
@@ -315,8 +318,8 @@ Helpers (`$options` takes any field in camelCase plus `idempotencyKey`):
 ```php
 $client->loud('Disk 91%', '/var on app-01', ['groupKey' => 'disk/app-01/var']);
 $client->light($title, $message, $options);  $client->beep(...);  $client->long(...);  $client->blast(...);
-$client->uhoh('db/backup', 'Backup failed', 'pg_dump exited with 1');   // opens a problem; a long honk by default
-$client->phew('db/backup', 'Backup OK', 'pg_dump finished in 41 s');    // closes it; a beep by default
+$client->uhoh('db/backup', 'Backup failed', 'pg_dump exited with 1');   // opens a problem; a Long message by default
+$client->phew('db/backup', 'Backup OK', 'pg_dump finished in 41 s');    // closes it; a Beep message by default
 ```
 
 ### Buttons (actions)

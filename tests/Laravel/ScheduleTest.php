@@ -33,7 +33,7 @@ final class ScheduleTest extends TestCase
         $this->runEvent($ok);            // healthy: nothing
         Honk::assertNothingSent();
 
-        $this->runEvent($failing);       // fails: a long honk problem with the output tail
+        $this->runEvent($failing);       // fails: a Long problem with the output tail
         Honk::assertSentTimes(1);
         Honk::assertSent(fn (Message $m) => $m->eventType === 'problem'
             && $m->groupKey === 'schedule/backup:run'
