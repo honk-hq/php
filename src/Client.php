@@ -40,6 +40,8 @@ final class Client
     private readonly string $userAgent;
     /** @var array{source?: ?string, environment?: ?string, channel?: ?string} */
     private readonly array $defaults;
+    /** @var (\Closure(Accepted): void)|null */
+    private readonly ?\Closure $onWarnings;
 
     /**
      * @param string                                                         $url            base address of your Honk server, e.g. https://honk.example.com
@@ -48,9 +50,10 @@ final class Client
      * @param int                                                            $retries        retries after the first attempt (network errors, 429 and 5xx only)
      * @param int                                                            $deadlineMs     total time budget of one honk(), waits included
      * @param array{source?: ?string, environment?: ?string, channel?: ?string} $defaults    applied when a message leaves these fields unset
-     * @param bool                                                           $validate       validate locally before sending (the server always validates)
+     * @param bool                                                           $validate       deprecated, ignored: the server checks the fields and reports corrections as warnings
      * @param int                                                            $backoffBaseMs  backoff: attempt n waits rand(0, min(max, base·2ⁿ)) or Retry-After when longer
      * @param ClientInterface|null                                           $httpClient     any PSR-18 client (default: ext-curl)
+     * @param (callable(Accepted): void)|null                                $onWarnings     called once after a send the server accepted with warnings (logging); what it throws is ignored
      */
     public function __construct(
         string $url,
@@ -67,6 +70,7 @@ final class Client
         ?StreamFactoryInterface $streamFactory = null,
         ?string $userAgent = null,
         ?Transport $transport = null,
+        ?callable $onWarnings = null,
     ) {
         $url = rtrim(trim($url), '/');
         if ($url === '') {
@@ -80,9 +84,6 @@ final class Client
         if ($key === '') {
             throw new InvalidArgumentException('Honk: key is required (a project ingestion key honk_…; is HONK_KEY set?)');
         }
-        if (preg_match('/^honk_[\x21-\x7E]+$/', $key) !== 1) {
-            throw new InvalidArgumentException('Honk: key must be a project ingestion key starting with honk_ (create one under Project → Keys)');
-        }
         $this->key = $key;
         if ($timeoutMs <= 0 || $deadlineMs <= 0 || $retries < 0 || $backoffBaseMs <= 0 || $backoffMaxMs <= 0) {
             throw new InvalidArgumentException('Honk: timeoutMs, deadlineMs and backoff must be positive, retries ≥ 0');
@@ -90,12 +91,13 @@ final class Client
         $this->defaults = array_intersect_key($defaults, ['source' => 1, 'environment' => 1, 'channel' => 1]);
         $this->userAgent = 'honk-php/' . self::VERSION . ($userAgent ? ' ' . $userAgent : '');
         $this->transport = $transport ?? self::makeTransport($httpClient, $requestFactory, $streamFactory);
+        $this->onWarnings = $onWarnings === null ? null : \Closure::fromCallable($onWarnings);
     }
 
     /**
      * Reads HONK_URL, HONK_KEY and optionally HONK_SOURCE, HONK_ENVIRONMENT, HONK_CHANNEL.
      *
-     * @param array{url?: string, key?: string, timeoutMs?: int, retries?: int, deadlineMs?: int, defaults?: array{source?: ?string, environment?: ?string, channel?: ?string}, validate?: bool, httpClient?: ClientInterface, requestFactory?: RequestFactoryInterface, streamFactory?: StreamFactoryInterface, userAgent?: string} $options
+     * @param array{url?: string, key?: string, timeoutMs?: int, retries?: int, deadlineMs?: int, defaults?: array{source?: ?string, environment?: ?string, channel?: ?string}, validate?: bool, httpClient?: ClientInterface, requestFactory?: RequestFactoryInterface, streamFactory?: StreamFactoryInterface, userAgent?: string, onWarnings?: callable(Accepted): void} $options
      *        named constructor arguments that override the environment
      */
     public static function fromEnv(array $options = []): self
@@ -123,13 +125,15 @@ final class Client
             requestFactory: $options['requestFactory'] ?? null,
             streamFactory: $options['streamFactory'] ?? null,
             userAgent: $options['userAgent'] ?? null,
+            onWarnings: $options['onWarnings'] ?? null,
         );
     }
 
     /**
      * Sends one event. Returns once Honk has durably stored it (202), which does not mean a push
      * was delivered. Network errors, 429 and 5xx are retried with the same Idempotency-Key until
-     * $retries or $deadlineMs runs out.
+     * $retries or $deadlineMs runs out. The server corrects invalid optional fields instead of
+     * refusing the message; what it corrected is in the result's $warnings.
      *
      * @param Message|array<string, mixed> $message      a Message or camelCase fields
      * @param string|null                  $idempotencyKey stable key for this event (default: the message's, else a new UUIDv7)
@@ -139,7 +143,7 @@ final class Client
     public function honk(Message|array $message, ?string $idempotencyKey = null): Accepted
     {
         $message = is_array($message) ? Message::fromArray($message) : $message;
-        $body = Wire::encode(Wire::build($message, $this->defaults, $this->validate));
+        $body = Wire::encode(Wire::build($message, $this->defaults));
         $key = $idempotencyKey ?? $message->idempotencyKey;
         $key = $key === null ? Uuid::v7() : Wire::checkIdempotencyKey($key);
         $headers = [
@@ -156,7 +160,7 @@ final class Client
             try {
                 $response = $this->transport->post($this->url . '/v1/messages', $headers, $body, $timeout);
                 if ($response->status >= 200 && $response->status < 300) {
-                    return self::accepted($response, $key, $attempt);
+                    return $this->notify(self::accepted($response, $key, $attempt));
                 }
                 $failure = self::errorFor($response, $key, $attempt);
             } catch (TransportException $e) {
@@ -189,11 +193,12 @@ final class Client
     }
 
     /**
-     * A problem for $groupKey (opens or continues its incident). Severity defaults to long (error).
+     * A problem (opens or continues the incident of $groupKey; without a group key, of the
+     * title). Severity defaults to long (error).
      *
      * @param array<string, mixed> $options message fields in camelCase, plus 'idempotencyKey'
      */
-    public function uhoh(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function uhoh(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->sendHelper(Helper::problem($groupKey, $title, $message, $options));
     }
@@ -203,17 +208,18 @@ final class Client
      *
      * @param array<string, mixed> $options
      */
-    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function problem(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->uhoh($groupKey, $title, $message, $options);
     }
 
     /**
-     * A recovery for $groupKey (closes its open incident). Severity defaults to beep (success).
+     * A recovery (closes the open incident of $groupKey, or of the title). Severity defaults to
+     * beep (success).
      *
      * @param array<string, mixed> $options
      */
-    public function phew(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function phew(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->sendHelper(Helper::recovery($groupKey, $title, $message, $options));
     }
@@ -223,7 +229,7 @@ final class Client
      *
      * @param array<string, mixed> $options
      */
-    public function recovery(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function recovery(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->phew($groupKey, $title, $message, $options);
     }
@@ -259,7 +265,7 @@ final class Client
     }
 
     /**
-     * A Long message (severity error; pushes at least as high priority).
+     * A Long message (severity error).
      *
      * @param array<string, mixed> $options
      */
@@ -269,7 +275,7 @@ final class Client
     }
 
     /**
-     * A Blast message (severity critical; pushes at least as high priority).
+     * A Blast message (severity critical).
      *
      * @param array<string, mixed> $options
      */
@@ -313,7 +319,7 @@ final class Client
     }
 
     /**
-     * The wire body (snake_case) that honk() would post, with defaults applied and validated.
+     * The wire body (snake_case) that honk() would post, with defaults applied.
      *
      * @param Message|array<string, mixed> $message
      *
@@ -321,12 +327,26 @@ final class Client
      */
     public function body(Message|array $message): array
     {
-        return Wire::build(is_array($message) ? Message::fromArray($message) : $message, $this->defaults, $this->validate);
+        return Wire::build(is_array($message) ? Message::fromArray($message) : $message, $this->defaults);
     }
 
     private function sendHelper(Message $message): Accepted
     {
         return $this->honk($message);
+    }
+
+    /** Hands an accepted message with warnings to onWarnings; a failing hook never fails the send. */
+    private function notify(Accepted $accepted): Accepted
+    {
+        if ($this->onWarnings !== null && $accepted->hasWarnings()) {
+            try {
+                ($this->onWarnings)($accepted);
+            } catch (\Throwable) {
+                // The message is stored; a logging hook must not turn that into an error.
+            }
+        }
+
+        return $accepted;
     }
 
     private static function makeTransport(?ClientInterface $client, ?RequestFactoryInterface $requests, ?StreamFactoryInterface $streams): Transport
@@ -362,7 +382,7 @@ final class Client
             $receivedAt = new DateTimeImmutable();
         }
 
-        return new Accepted($data['id'], ($data['duplicate'] ?? false) === true, $receivedAt);
+        return new Accepted($data['id'], ($data['duplicate'] ?? false) === true, $receivedAt, Warning::listFrom($data['warnings'] ?? null));
     }
 
     private static function errorFor(Response $response, string $key, int $attempts): HonkException
@@ -375,20 +395,21 @@ final class Client
         $retryAfter = self::retryAfter($response->header('retry-after'));
         $body = is_array($data) ? $data : ($response->body === '' ? null : $response->body);
         $status = $response->status;
-        $label = "Honk {$status}" . ($code ? " {$code}" : '') . ": {$detail}";
+        $fields = [];
+        foreach (is_array($error['fields'] ?? null) ? $error['fields'] : [] as $f) {
+            if (is_array($f) && is_string($f['field'] ?? null) && is_string($f['code'] ?? null)) {
+                $fields[] = new FieldError($f['field'], $f['code'], is_string($f['message'] ?? null) ? $f['message'] : null);
+            }
+        }
+        // "Honk 422 validation_failed: Request validation failed (event_type invalid_enum: must be one of …) [request req_…]"
+        $label = "Honk {$status}" . ($code ? " {$code}" : '') . ": {$detail}"
+            . ($fields === [] ? '' : ' (' . implode('; ', array_map('strval', $fields)) . ')');
+        $suffix = $requestId ? " [request {$requestId}]" : '';
 
         if (in_array($status, [400, 413, 415, 422], true)) {
-            $fields = [];
-            foreach (is_array($error['fields'] ?? null) ? $error['fields'] : [] as $f) {
-                if (is_array($f) && is_string($f['field'] ?? null) && is_string($f['code'] ?? null)) {
-                    $fields[] = new FieldError($f['field'], $f['code'], is_string($f['message'] ?? null) ? $f['message'] : null);
-                }
-            }
-            $list = implode('; ', array_map(static fn (FieldError $f) => $f->field . ' ' . ($f->message ?? $f->code), $fields));
-
-            return new ValidationException($list === '' ? $label : "{$label} ({$list})", $fields, false, $status, $code, $requestId, $key, $attempts, $body);
+            return new ValidationException($label . $suffix, $fields, false, $status, $code, $requestId, $key, $attempts, $body);
         }
-        $args = [$label, $status, $code, $requestId, $key, $attempts, $retryAfter, $body];
+        $args = [$label . $suffix, $status, $code, $requestId, $key, $attempts, $retryAfter, $body];
 
         return match (true) {
             $status === 401, $status === 403 => new AuthException(...$args),
@@ -396,10 +417,10 @@ final class Client
             $status === 429 => new QuotaException(...$args),
             $status >= 500 => new ServerException(...$args),
             $status >= 300 && $status < 400 => new HonkException(
-                "Honk answered {$status} redirect" . (($to = $response->header('location')) ? " to {$to}" : '') . '; set url to the final https address',
+                "Honk answered {$status} redirect" . (($to = $response->header('location')) ? " to {$to}" : '') . '; set url to the final https address' . $suffix,
                 ...array_slice($args, 1),
             ),
-            $status === 404 => new HonkException("{$label} (is url the base address of your Honk server?)", ...array_slice($args, 1)),
+            $status === 404 => new HonkException("{$label} (is url the base address of your Honk server?){$suffix}", ...array_slice($args, 1)),
             default => new HonkException(...$args),
         };
     }

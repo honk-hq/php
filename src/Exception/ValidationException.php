@@ -7,11 +7,15 @@ namespace Honk\Exception;
 use Honk\FieldError;
 use Throwable;
 
-/** The message is invalid: rejected locally before sending, or by the server (400, 413, 415, 422). */
+/**
+ * The server refused the request (400, 413, 415, 422: e.g. no message and no title, an unknown
+ * field, an invalid event_type), or the SDK did before sending (no message and no title, an
+ * invalid Idempotency-Key). $fields lists each refused field with its code and message.
+ */
 class ValidationException extends HonkException
 {
     /**
-     * @param list<FieldError> $fields every invalid field
+     * @param list<FieldError> $fields every refused field (field path, code, message)
      * @param bool             $local  true when rejected before any request was made
      */
     public function __construct(
@@ -34,8 +38,6 @@ class ValidationException extends HonkException
      */
     public static function local(array $fields): self
     {
-        $summary = implode('; ', array_map(static fn (FieldError $f) => $f->field . ' ' . ($f->message ?? $f->code), $fields));
-
-        return new self('Invalid Honk message: ' . $summary, $fields, true);
+        return new self('Invalid Honk message: ' . implode('; ', array_map('strval', $fields)), $fields, true);
     }
 }

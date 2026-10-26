@@ -31,6 +31,13 @@ return [
     ],
 
     /*
+    | The server delivers a message even when it has to correct a field (shorten a title, leave
+    | out an invalid URL, …) and says what it corrected. Log each correction as a warning so you
+    | can fix the sender; HonkSent::$accepted->warnings has them too.
+    */
+    'log_warnings' => (bool) env('HONK_LOG_WARNINGS', true),
+
+    /*
     | Honk::queue(): connection and queue (registered with Queue::route()); tries and backoff
     | (seconds) override the job's #[Tries(5)] / #[Backoff(10, 60, 300, 900)] when set.
     */

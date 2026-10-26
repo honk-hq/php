@@ -73,11 +73,11 @@ final class FakeTest extends TestCase
         Honk::assertSent(fn (Message $m) => ($m->actions[0]['url'] ?? null) === 'mailto:ana@acme.example');
     }
 
-    public function testInvalidMessagesStillThrow(): void
+    public function testMessagesWithoutTextStillThrow(): void
     {
         Honk::fake();
         $this->expectException(ValidationException::class);
-        Honk::send(['message' => 'x', 'url' => 'http://insecure.example.com']);
+        Honk::send(['title' => ' ', 'url' => 'http://insecure.example.com']);
     }
 
     public function testNothingAssertionsAndFailures(): void

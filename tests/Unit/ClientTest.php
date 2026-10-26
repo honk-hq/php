@@ -17,6 +17,7 @@ use Honk\Exception\TimeoutException;
 use Honk\Exception\ValidationException;
 use Honk\Message;
 use Honk\Tests\Support\MockServer;
+use Honk\Warning;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -312,7 +313,6 @@ final class ClientTest extends TestCase
         yield '422 unknown_field' => [MockServer::error(422, 'unknown_field', ['fields' => [['field' => 'foo', 'code' => 'not_allowed']]]), ValidationException::class, 'unknown_field'];
         yield '413 payload_too_large' => [MockServer::error(413, 'payload_too_large'), ValidationException::class, 'payload_too_large'];
         yield '401 invalid_key' => [MockServer::error(401, 'invalid_key'), AuthException::class, 'invalid_key'];
-        yield '403 priority_not_allowed' => [MockServer::error(403, 'priority_not_allowed'), AuthException::class, 'priority_not_allowed'];
         yield '403 project_suspended' => [MockServer::error(403, 'project_suspended'), AuthException::class, 'project_suspended'];
         yield '409 idempotency_conflict' => [MockServer::error(409, 'idempotency_conflict'), ConflictException::class, 'idempotency_conflict'];
         yield '404 not_found' => [MockServer::error(404, 'not_found'), HonkException::class, 'not_found'];
@@ -352,8 +352,114 @@ final class ClientTest extends TestCase
         } catch (ValidationException $e) {
             $this->assertCount(1, $e->fields);
             $this->assertSame(['image_url', 'invalid_format', 'must be https'], [$e->fields[0]->field, $e->fields[0]->code, $e->fields[0]->message]);
-            $this->assertStringContainsString('image_url must be https', $e->getMessage());
+            $this->assertStringContainsString('image_url invalid_format: must be https', $e->getMessage());
         }
+    }
+
+    public function testServerErrorsAreSurfacedInFull(): void
+    {
+        $this->server->script([MockServer::error(422, 'validation_failed', ['fields' => [
+            ['field' => 'event_type', 'code' => 'invalid_enum', 'message' => 'must be one of event, problem, recovery'],
+            ['field' => 'message', 'code' => 'required'],
+        ]])]);
+        try {
+            $this->client()->send(['message' => 'x', 'eventType' => 'incident']);
+            $this->fail('expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(
+                'Honk 422 validation_failed: validation_failed happened (event_type invalid_enum: must be one of event, problem, recovery; message required) [request req_test]',
+                $e->getMessage(),
+            );
+            $this->assertSame(422, $e->status);
+            $this->assertSame('validation_failed', $e->errorCode);
+            $this->assertSame('req_test', $e->requestId);
+            $this->assertSame(['event_type:invalid_enum', 'message:required'], array_map(static fn ($f) => "{$f->field}:{$f->code}", $e->fields));
+            $this->assertFalse($e->local);
+        }
+    }
+
+    public function testRequestIdIsInEveryServerErrorMessage(): void
+    {
+        $this->server->script([MockServer::error(401, 'invalid_key')]);
+        $this->expectExceptionMessage('Honk 401 invalid_key: invalid_key happened [request req_test]');
+        $this->client()->send(['message' => 'x']);
+    }
+
+    public function testWarningsArePassedThrough(): void
+    {
+        $warnings = [
+            ['field' => 'title', 'code' => 'truncated', 'message' => 'shortened to 160 characters'],
+            ['field' => 'actions[1].url', 'code' => 'ignored', 'message' => 'not an https, mailto, tel or sms URL; left out'],
+            ['field' => 'priority', 'code' => 'something_new'],
+        ];
+        $this->server->script([['status' => 202, 'body' => MockServer::accepted()['body'] + ['warnings' => $warnings]]]);
+        $calls = [];
+        $res = $this->client(['onWarnings' => static function (Accepted $a) use (&$calls): void {
+            $calls[] = $a;
+        }])->send(['message' => 'x', 'title' => str_repeat('t', 200)]);
+
+        $this->assertTrue($res->hasWarnings());
+        $this->assertSame(['title', 'actions[1].url', 'priority'], array_map(static fn (Warning $w) => $w->field, $res->warnings));
+        $this->assertSame(['truncated', 'ignored', 'something_new'], array_map(static fn (Warning $w) => $w->code, $res->warnings));
+        $this->assertSame(Warning::TRUNCATED, $res->warnings[0]->code);
+        $this->assertSame('title truncated: shortened to 160 characters', (string) $res->warnings[0]);
+        $this->assertSame('priority something_new', (string) $res->warnings[2]);
+        $this->assertSame($warnings[0], $res->toArray()['warnings'][0]);
+        $this->assertCount(1, $calls);
+        $this->assertSame($res, $calls[0]);
+    }
+
+    public function testNoWarningsMeansAnEmptyListAndNoHookCall(): void
+    {
+        $this->server->script([['status' => 202, 'body' => MockServer::accepted()['body'] + ['warnings' => []]], MockServer::accepted(), ['status' => 202, 'body' => MockServer::accepted()['body'] + ['warnings' => 'nonsense']]]);
+        $called = 0;
+        $honk = $this->client(['onWarnings' => static function () use (&$called): void {
+            $called++;
+        }]);
+        foreach ([1, 2, 3] as $_) {
+            $res = $honk->send(['message' => 'x']);
+            $this->assertSame([], $res->warnings);
+            $this->assertFalse($res->hasWarnings());
+        }
+        $this->assertSame(0, $called);
+    }
+
+    public function testAFailingWarningsHookNeverFailsTheSend(): void
+    {
+        $this->server->script([['status' => 202, 'body' => MockServer::accepted()['body'] + ['warnings' => [['field' => 'url', 'code' => 'ignored', 'message' => 'not https']]]]]);
+        $res = $this->client(['onWarnings' => static fn () => throw new \RuntimeException('logger down')])->send(['message' => 'x', 'url' => 'http://x']);
+        $this->assertSame('msg_01k6h3w4z5x6y7z8a9b0c1d2e3', $res->id);
+        $this->assertCount(1, $res->warnings);
+    }
+
+    public function testTitleOnlyMessageIsSentWithoutMessage(): void
+    {
+        $this->client()->send(Message::make()->title('Backup finished'));
+        $this->assertSame('{"title":"Backup finished"}', $this->server->requests()[0]['body']);
+    }
+
+    public function testProblemAndRecoveryWithoutAGroupKey(): void
+    {
+        $honk = $this->client();
+        $honk->phew(null, 'Backup OK', 'pg_dump finished', ['sourceSequence' => 7]);
+        $honk->uhoh('', 'Backup failed', 'exit 1');
+        $honk->send(['message' => 'fixed', 'eventType' => 'recovery']);
+        $r = $this->server->requests();
+        $this->assertSame(['title' => 'Backup OK', 'message' => 'pg_dump finished', 'severity' => 'success', 'event_type' => 'recovery', 'source_sequence' => 7], json_decode($r[0]['body'], true));
+        $this->assertSame(['title' => 'Backup failed', 'message' => 'exit 1', 'severity' => 'error', 'event_type' => 'problem'], json_decode($r[1]['body'], true));
+        $this->assertSame(['message' => 'fixed', 'event_type' => 'recovery'], json_decode($r[2]['body'], true));
+    }
+
+    public function testMissingMessageAndTitleIsNeverSent(): void
+    {
+        try {
+            $this->client()->send(['severity' => 'loud', 'message' => '  ']);
+            $this->fail('expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertTrue($e->local);
+            $this->assertSame([['message', 'required']], array_map(static fn ($f) => [$f->field, $f->code], $e->fields));
+        }
+        $this->assertCount(0, $this->server->requests());
     }
 
     public function testRedirectsAreNotFollowed(): void
@@ -380,16 +486,13 @@ final class ClientTest extends TestCase
         $this->assertCount(2, $this->server->requests());
     }
 
-    public function testValidateFalseLeavesChecksToTheServer(): void
+    public function testValidateIsADeprecatedNoOp(): void
     {
-        $this->server->script([MockServer::error(422, 'validation_failed', ['fields' => [['field' => 'severity', 'code' => 'invalid_enum']]])]);
-        try {
-            $this->client(['validate' => false])->send(['message' => 'x', 'severity' => 'fatal']);
-            $this->fail('expected ValidationException');
-        } catch (ValidationException $e) {
-            $this->assertFalse($e->local);
-        }
-        $this->assertSame('fatal', json_decode($this->server->requests()[0]['body'], true)['severity']);
+        $this->client(['validate' => false])->send(['message' => 'x', 'severity' => 'fatal']);
+        $this->client(['validate' => true])->send(['message' => 'x', 'severity' => 'fatal']);
+        $r = $this->server->requests();
+        $this->assertSame($r[0]['body'], $r[1]['body']);
+        $this->assertSame('fatal', json_decode($r[1]['body'], true)['severity']);
     }
 
     public function testConstructorRejectsBadConfigClearly(): void
@@ -398,7 +501,6 @@ final class ClientTest extends TestCase
             [['url' => '', 'key' => self::KEY], 'HONK_URL'],
             [['url' => 'honk.example.com', 'key' => self::KEY], 'https://'],
             [['url' => 'https://h', 'key' => ''], 'HONK_KEY'],
-            [['url' => 'https://h', 'key' => 'hka_mobile'], 'honk_'],
             [['url' => 'https://h', 'key' => self::KEY, 'retries' => -1], 'retries'],
         ] as [$args, $needle]) {
             try {

@@ -34,7 +34,7 @@ final class PendingDeferredHonk
     }
 
     /** @param array<string, mixed> $options */
-    public function uhoh(string $groupKey, ?string $title, string $message, array $options = []): void
+    public function uhoh(?string $groupKey, ?string $title, string $message, array $options = []): void
     {
         $this->honk(Helper::problem($groupKey, $title, $message, $options));
     }
@@ -44,13 +44,13 @@ final class PendingDeferredHonk
      *
      * @param array<string, mixed> $options
      */
-    public function problem(string $groupKey, ?string $title, string $message, array $options = []): void
+    public function problem(?string $groupKey, ?string $title, string $message, array $options = []): void
     {
         $this->uhoh($groupKey, $title, $message, $options);
     }
 
     /** @param array<string, mixed> $options */
-    public function phew(string $groupKey, ?string $title, string $message, array $options = []): void
+    public function phew(?string $groupKey, ?string $title, string $message, array $options = []): void
     {
         $this->honk(Helper::recovery($groupKey, $title, $message, $options));
     }
@@ -60,7 +60,7 @@ final class PendingDeferredHonk
      *
      * @param array<string, mixed> $options
      */
-    public function recovery(string $groupKey, ?string $title, string $message, array $options = []): void
+    public function recovery(?string $groupKey, ?string $title, string $message, array $options = []): void
     {
         $this->phew($groupKey, $title, $message, $options);
     }

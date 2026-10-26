@@ -70,8 +70,8 @@ Honk names as input aliases, in any case, and always sends the canonical value.
 | Critical | Blast | `blast` (critical) | `blast(…)` | `->blast()` | `Severity::Blast` |
 
 `->severity('loud')`, `'LOUD'`, `'warning'` and `Severity::Loud` (which *is*
-`Severity::Warning`) are the same event, also for idempotency. `long` and `blast` push at
-least as `high` priority. `info()`, `success()`, `warning()`, `error()` and `critical()`
+`Severity::Warning`) are the same event, also for idempotency. The level alone decides how
+loud the push is. `info()`, `success()`, `warning()`, `error()` and `critical()`
 remain as synonyms; `Severity::parse('Blast')` returns `Severity::Critical`.
 
 ## Laravel 13
@@ -139,7 +139,7 @@ class CustomerRequested extends Notification implements ShouldQueue, ToHonk
         return HonkMessage::create()
             ->title(Str::limit("New request: {$r->subject}", 150))
             ->line("{$r->name} ({$r->company})")
-            ->line(Str::limit($r->body, 2000))       // message: ≤ 8192 bytes
+            ->line(Str::limit($r->body, 2000))
             ->light()                                // a Light message (info)
             ->category('customers')
             ->groupKey("requests/{$r->id}")          // one group per request
@@ -188,8 +188,8 @@ Honk::loud('Disk 91%', '/var on app-01', ['groupKey' => 'disk/app-01/var']);    
 | `Honk::queue()` | in a queue worker (`SendHonkMessage`, `#[Tries(5)]`, `#[Backoff(10, 60, 300, 900)]`) | anything that must arrive: survives restarts and retries with the same key; a daily quota releases the job until the reset |
 | `Honk::honk()`, `Honk::light()` … | right now, retries included (up to `honk.deadline`) | jobs, commands, the scheduler |
 
-`defer()` and `queue()` validate the message immediately, so mistakes surface in your code,
-not later. `queue()` returns the job; the connection and queue come from
+`defer()` and `queue()` check right away that there is a message or a title, so that mistake
+surfaces in your code, not later. `queue()` returns the job; the connection and queue come from
 `HONK_QUEUE_CONNECTION` / `HONK_QUEUE` (registered with Laravel 13's `Queue::route()`).
 
 ### Testing: `Honk::fake()`
@@ -212,7 +212,7 @@ Honk::assertNothingSent(); // also assertNothingQueued(), assertNothingOutgoing(
 
 The fake records `honk()`, `uhoh()`, `phew()`, the horn helpers, `defer()` and
 notification-channel sends as *sent*, and `queue()` as *queued*; nothing touches the network.
-It validates like the real client (an invalid message still throws), applies the defaults and
+It checks like the real client (no message and no title still throws), applies the defaults and
 Context metadata, and records the severity as a `Severity` case whatever spelling was used.
 Callbacks receive the message and its idempotency key. With `Notification::fake()` instead,
 `toHonk()` is never called.
@@ -267,7 +267,7 @@ dispatched them.
 
 ### Events and container
 
-- `Honk\Laravel\Events\HonkSent` (message, `Accepted`, idempotency key, `via`) and
+- `Honk\Laravel\Events\HonkSent` (message, `Accepted` with its `warnings`, idempotency key, `via`) and
   `HonkFailed` (message, exception, idempotency key, `via`) fire for every message; `via` is
   `'send'` (sent right away), `'defer'`, `'queue'` or `'notification'`.
 - `HonkManager` (the facade root) is a `#[Singleton]` that receives `#[Config('honk')]`; inject
@@ -278,35 +278,32 @@ dispatched them.
 Messages with the same `groupKey` (per project, environment, source and channel) form one
 group: the first one pushes, repeats update it calmly instead of buzzing again. Use one key
 per customer request (`requests/{$id}`), and a shared key only for repeats of the same problem
-(`queue/failed-jobs`). `uhoh()` and its `phew()` share one.
+(`queue/failed-jobs`). The group key is optional: without one, a message groups by its title.
 
 ## Sending
 
 ```php
-$client->honk(Message|array $message, ?string $idempotencyKey = null): Accepted // id, duplicate, receivedAt
+$client->honk(Message|array $message, ?string $idempotencyKey = null): Accepted // id, duplicate, receivedAt, warnings
 ```
 
 `honk()`, `uhoh()` and `phew()` arrived in 0.3.0; `send`, `problem` and `recovery` still work
 and send exactly the same request.
 
+The essentials:
+
 | Field (builder method) | Notes |
 |---|---|
-| `message` | **required**, 1–8192 bytes UTF-8, line breaks allowed (`->line()` appends one) |
-| `title` | ≤ 160 chars, one line; default: first line of the message |
-| `severity` (`->light()` … `->blast()`) | `light` `beep` `loud` `long` `blast`, a `Severity` case, or the canonical names, any case; default `light`; `long`/`blast` push at least as `high` |
-| `priority` | `low` `normal` `high` `urgent` (`urgent` needs a key with *allow urgent*) |
-| `category` | `infrastructure` `security` `backups` `deployments` `payments` `customers` `sales` `automation` `personal` `other` |
-| `source` / `environment` / `channel` | ≤ 64 / 32 / 64 chars; default `api` / `default` / `general` or the client defaults |
-| `groupKey` | ≤ 128 chars |
-| `eventType` | `event` `problem` `recovery` (`recovery` needs `groupKey`) |
-| `occurredAt` | `DateTimeInterface` (Carbon works) or RFC 3339 string |
-| `url` | `https://` only, no credentials |
-| `imageUrl` | `https://` only, no credentials or `#fragment`; fetched by the server afterwards |
-| `actions` (`->action($title, $url)`) | up to 3 buttons `['title' => …, 'url' => …]`, the first is the primary; see below |
-| `metadata` (`->meta($k, $v)`) | ≤ 16 keys `[A-Za-z0-9_.-]{1,64}`; string (≤ 512 chars), int, float or bool values |
-| `ttlSeconds` | push lifetime 60–86400, default 3600 |
-| `sourceSequence` | 0 … 2^53-1, needs `groupKey` |
-| `idempotencyKey` | 1–128 printable ASCII characters |
+| `message` | the text; line breaks allowed (`->line()` appends one) |
+| `title` | one line; default: the first line of the message. A message or a title is required, nothing else |
+| `severity` (`->light()` … `->blast()`) | the level, and the level alone decides how loud the push is: `light` `beep` `loud` `long` `blast`, a `Severity` case, or the canonical names, any case; default `light` |
+| `groupKey` | optional; ties repeats and a problem to its recovery |
+| `eventType` | `event` `problem` `recovery` (what `uhoh()` / `phew()` set) |
+
+The other fields (`priority`, `category`, `source`, `environment`, `channel`, `occurredAt`,
+`url`, `imageUrl`, `actions`, `metadata`, `ttlSeconds`, `sourceSequence`) mirror
+`POST /v1/messages` in camelCase; `occurredAt` takes a `DateTimeInterface` (Carbon works). The
+SDK does not check their contents: the server does, and it delivers the message even when it
+has to correct one (see [Warnings](#warnings)).
 
 Arrays use the same camelCase keys (`['message' => …, 'groupKey' => …]`); snake_case keys
 are rejected with a hint. Null and empty optional fields (and empty `actions`) are omitted. A
@@ -320,6 +317,7 @@ $client->loud('Disk 91%', '/var on app-01', ['groupKey' => 'disk/app-01/var']);
 $client->light($title, $message, $options);  $client->beep(...);  $client->long(...);  $client->blast(...);
 $client->uhoh('db/backup', 'Backup failed', 'pg_dump exited with 1');   // opens a problem; a Long message by default
 $client->phew('db/backup', 'Backup OK', 'pg_dump finished in 41 s');    // closes it; a Beep message by default
+$client->phew(null, 'Backup OK', 'pg_dump finished');                  // no group key: matched by the title
 ```
 
 ### Buttons (actions)
@@ -336,14 +334,13 @@ $client->honk(Message::make('Maria Tudor (Acme) asked for a quote: online shop, 
     ->action('Call Maria', 'tel:+15550134'));
 ```
 
-- `title`: 1–40 characters, one line, shown as sent.
-- `url`, at most 2048 bytes without spaces: `https://` (no credentials); `mailto:` with one
-  address and optionally `?subject=…&body=…` (percent-encoded with `rawurlencode()`, no other
-  keys); `tel:` with a number (digits, `-` `.` `(` `)`, `+` only first); `sms:` with a number
-  and optionally `?body=…`. Other schemes are refused.
+- `title`: a short label, one line, shown as sent.
+- `url`: `https://`, `mailto:` (optionally `?subject=…&body=…`, percent-encoded with
+  `rawurlencode()`), `tel:` or `sms:`. The server leaves out a button it cannot use and says so
+  in the warnings (`actions[1].url ignored`); the message is still delivered.
 - Honk! Honk! never opens or fetches them; the app does when you tap one. They appear on the
   message in the app and the web inbox, and on iPhone notifications that show the message
-  text. Errors name the button: `actions[1].url`.
+  text.
 - The same works in `toHonk()` (`HonkMessage::create()->action(…)`), in arrays
   (`'actions' => [['title' => 'Call Maria', 'url' => 'tel:+15550134']]`), with `Honk::queue()`
   and `Honk::defer()`. `->actions([...])` replaces the list.
@@ -358,14 +355,39 @@ new Client(
     retries: 4,            // after the first attempt
     deadlineMs: 30000,     // total, waits included
     defaults: ['source' => 'billing', 'environment' => 'production', 'channel' => 'payments'],
-    validate: true,        // local checks (the server always validates)
     httpClient: $psr18,    // optional PSR-18 client; with requestFactory/streamFactory (auto with Guzzle)
+    onWarnings: fn (Accepted $a) => error_log(implode('; ', $a->warnings)), // optional, see Warnings
 );
 ```
 
 With a PSR-18 client, configure its own timeout and disable redirects
 (Guzzle: `new GuzzleHttp\Client(['timeout' => 5, 'allow_redirects' => false])`); the SDK
 still enforces the total deadline.
+
+## Warnings
+
+The server delivers first: an alert is never lost to an optional field. When it has to correct
+something (shorten a long title, leave out an `http://` link or a button it cannot use, move a
+TTL into range, lower `urgent` for a key that may not send it), it accepts the message and says
+what it did. `Accepted::$warnings` lists them (`[]` when nothing was corrected):
+
+```php
+$accepted = $honk->honk(Message::make('Disk 91%')->title($veryLongTitle)->url('http://grafana.local'));
+
+foreach ($accepted->warnings as $w) {   // Honk\Warning
+    echo $w;                            // "title truncated: shortened to 160 characters"
+    // $w->field ("title", "metadata.order", "actions[1].url"), $w->code, $w->message
+}
+$accepted->hasWarnings();
+```
+
+`$w->code` is `truncated`, `normalized`, `ignored`, `clamped`, `downgraded` or `hashed`
+(`Warning::TRUNCATED` …). Warnings are never exceptions. To log them in one place, pass
+`onWarnings: fn (Accepted $a) => …` to the client; it runs once per send that has warnings, and
+anything it throws is ignored. In Laravel each warning is logged at `warning` level (with the
+field, code, message id and idempotency key) for every way of sending; turn that off with
+`HONK_LOG_WARNINGS=false` (`honk.log_warnings`). `HonkSent::$accepted->warnings` has them too,
+and `php artisan honk:test` prints them.
 
 ## Retries and idempotency, guaranteed
 
@@ -385,12 +407,17 @@ still enforces the total deadline.
 ## Errors
 
 All exceptions extend `Honk\Exception\HonkException` and expose `status`, `errorCode`,
-`requestId`, `idempotencyKey`, `attempts`, `retryAfter` and `isRetryable()`.
+`requestId`, `idempotencyKey`, `attempts`, `retryAfter` and `isRetryable()`. The message says
+it all, e.g. `Honk 422 validation_failed: Request validation failed (event_type invalid_enum:
+must be one of event, problem, recovery) [request req_01k6…]`.
+
+The server refuses only what it cannot deliver: a bad or missing key, invalid JSON, a body over
+16 KiB, no message and no title, an unknown top-level field, an invalid `eventType`.
 
 | Exception | When | What to do |
 |---|---|---|
-| `ValidationException` | rejected locally (`local === true`) or `400`/`413`/`415`/`422`; `fields` lists every problem | fix the message |
-| `AuthException` | `401 invalid_key`, `403 priority_not_allowed`, `project_suspended`, `workspace_suspended` | fix the key or the priority |
+| `ValidationException` | `400`/`413`/`415`/`422`, or locally (`local === true`) for no message and no title or an invalid idempotency key; `fields` lists each field with its code and message | fix the message |
+| `AuthException` | `401 invalid_key`, `403 project_suspended`, `workspace_suspended` | fix the key |
 | `QuotaException` | `429 quota_exceeded` (daily, resets at UTC midnight) or `rate_limited`, after retries | retry after `retryAfter` seconds |
 | `ConflictException` | `409 idempotency_conflict`: same key, different payload | use a new key or the original payload |
 | `NetworkException` | unreachable on every attempt | retry later, same key |
@@ -404,7 +431,7 @@ use Honk\Exception\ValidationException;
 try {
     $honk->honk($message, "order-{$order->id}-failed");
 } catch (ValidationException $e) {
-    report($e); // a bug: $e->fields says what to fix
+    report($e); // a bug: $e->fields (field, code, message) says what to fix
 } catch (HonkException $e) {
     if (!$e->isRetryable()) {
         throw $e;

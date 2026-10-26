@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Honk\Tests\Unit;
 
 use Honk\Client;
-use Honk\Exception\ValidationException;
 use Honk\Message;
 use Honk\Severity;
 use Honk\Tests\Support\MockServer;
@@ -50,17 +49,11 @@ final class SeverityTest extends TestCase
         $this->assertSame(array_fill(0, 5, '{"message":"x","severity":"warning"}'), array_column($server->requests(), 'body'));
     }
 
-    public function testAliasesAreNormalizedWithoutValidationToo(): void
+    public function testAliasesAreCanonicalAndUnknownValuesAreSentAsGiven(): void
     {
-        $this->assertSame('critical', Wire::build(Message::make('x')->severity('BLAST'), [], false)['severity']);
-        $this->assertSame('fatal', Wire::build(Message::make('x')->severity('fatal'), [], false)['severity']);
-    }
-
-    public function testUnknownSeverityNamesTheHonkScale(): void
-    {
-        $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('severity must be one of light (info), beep (success), loud (warning), long (error), blast (critical)');
-        Wire::build(Message::make('x')->severity('fatal'));
+        $this->assertSame('critical', Wire::build(Message::make('x')->severity('BLAST'))['severity']);
+        // The server turns an unknown level into info and says so in the warnings.
+        $this->assertSame('fatal', Wire::build(Message::make('x')->severity('fatal'))['severity']);
     }
 
     public function testBuilderAndClientHelpers(): void

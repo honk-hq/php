@@ -6,6 +6,45 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+The server now delivers first (contracts/API.md §5.1): it refuses only what it cannot deliver
+and corrects the rest, saying what it corrected. The SDK becomes a thin wrapper around that.
+
+### Added
+- `Accepted::$warnings`: a list of `Honk\Warning` (`field`, `code`, `message`, `__toString()`
+  like `title truncated: shortened to 160 characters`) for what the server corrected (codes
+  `truncated`, `normalized`, `ignored`, `clamped`, `downgraded`, `hashed`, also as
+  `Warning::TRUNCATED` …); `[]` when nothing. `Accepted::hasWarnings()`; `toArray()` includes
+  them.
+- `onWarnings` client option (`callable(Accepted): void`, also in `Client::fromEnv()`): called
+  once per send that has warnings; anything it throws is ignored.
+- Laravel: every warning is logged at `warning` level (field, code, message id, idempotency
+  key) for all ways of sending; `honk.log_warnings` / `HONK_LOG_WARNINGS=false` turns it off.
+  `HonkSent::$accepted->warnings` carries them and `php artisan honk:test` prints them.
+
+### Changed
+- No more local checks of field contents (lengths, URLs, actions, metadata, enums, TTL,
+  source sequence, body size): fields are sent as given and the server corrects them. The SDK
+  still refuses, before sending, a message without a message and a title, an
+  `Idempotency-Key` that is not 1–128 printable ASCII characters (it could not be sent as a
+  header), a body that cannot be encoded as JSON, and unknown or wrongly typed keys in arrays.
+- A title alone is enough: `Message::make()->title('Backup finished')` sends no `message`.
+- The group key is optional everywhere: `uhoh()`, `phew()` (and `problem()`, `recovery()`,
+  also on `Honk::defer()`) take `?string $groupKey`; `null` or `''` sends none, and a recovery
+  or a `sourceSequence` no longer needs one. An unknown severity is sent as given (the server
+  makes it `info` with a warning); horn names are still sent canonical.
+- Server errors say everything in the message: status, code, message, each field with its code
+  and message, and the request id (`… (event_type invalid_enum: must be one of …) [request
+  req_…]`). `FieldError` has a `__toString()`.
+- The key no longer has to start with `honk_` locally; the server answers `401 invalid_key`.
+
+### Deprecated
+- The `validate` constructor argument (and `fromEnv()` option) is accepted and ignored.
+
+### Removed
+- Documentation of the retired `403 priority_not_allowed` and `requires_group_key`: an
+  `urgent` priority from a key without *allow urgent* is now lowered to `high` with a
+  `downgraded` warning.
+
 ## [0.3.2] - 2026-10-18
 
 ### Changed

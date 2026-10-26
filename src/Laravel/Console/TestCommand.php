@@ -49,6 +49,9 @@ final class TestCommand extends Command
         }
 
         $this->components->info(sprintf('Accepted %s (%s%s).', $accepted->id, ucfirst($severity->horn()), $accepted->duplicate ? ', duplicate' : ''));
+        foreach ($accepted->warnings as $warning) {
+            $this->components->warn('Corrected by the server: ' . $warning);
+        }
 
         return self::SUCCESS;
     }

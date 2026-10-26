@@ -134,40 +134,47 @@ final class IntegrationTest extends TestCase
         }
     }
 
-    public function testUrgentWithoutAllowUrgent(): void
+    public function testUrgentWithoutAllowUrgentIsDowngraded(): void
     {
-        try {
-            $res = $this->client()->send(['message' => 'urgent ' . self::$run, 'priority' => 'urgent']);
-            $this->assertStringStartsWith('msg_', $res->id); // the key allows urgent
-        } catch (AuthException $e) {
-            $this->assertSame(403, $e->status);
-            $this->assertSame('priority_not_allowed', $e->errorCode);
-        }
+        $res = $this->client()->send(['message' => 'urgent ' . self::$run, 'priority' => 'urgent']);
+        $this->assertStringStartsWith('msg_', $res->id);
+        $codes = array_map(static fn ($w) => "{$w->field}:{$w->code}", $res->warnings);
+        // [] when the key allows urgent
+        $this->assertContains($codes, [[], ['priority:downgraded']]);
     }
 
-    public function testServerSideValidationMapsFields(): void
+    public function testServerCorrectsInvalidFieldsWithWarnings(): void
+    {
+        $res = $this->client()->send(['message' => 'corrected ' . self::$run, 'severity' => 'fatal', 'ttlSeconds' => 5]);
+        $this->assertStringStartsWith('msg_', $res->id);
+        $fields = array_map(static fn ($w) => "{$w->field}:{$w->code}", $res->warnings);
+        sort($fields);
+        $this->assertSame(['severity:ignored', 'ttl_seconds:clamped'], $fields);
+    }
+
+    public function testInvalidActionIsLeftOutWithAWarning(): void
+    {
+        $res = $this->client()->send(Message::make('actions ' . self::$run)->action('Call', 'tel:+15550134')->action('Run', 'javascript:alert(1)'));
+        $this->assertSame(['actions[1].url:ignored'], array_map(static fn ($w) => "{$w->field}:{$w->code}", $res->warnings));
+    }
+
+    public function testRecoveryWithoutAGroupKeyIsAccepted(): void
+    {
+        $res = $this->client()->phew(null, 'Recovered ' . self::$run, 'no group key needed');
+        $this->assertStringStartsWith('msg_', $res->id);
+    }
+
+    public function testInvalidEventTypeIsRefusedWithFieldsAndRequestId(): void
     {
         try {
-            $this->client(['validate' => false])->send(['message' => 'x', 'severity' => 'fatal', 'ttlSeconds' => 5]);
+            $this->client()->send(['message' => 'x', 'eventType' => 'incident']);
             $this->fail('expected ValidationException');
         } catch (ValidationException $e) {
             $this->assertFalse($e->local);
             $this->assertSame(422, $e->status);
-            $fields = array_map(static fn ($f) => "{$f->field}:{$f->code}", $e->fields);
-            sort($fields);
-            $this->assertSame(['severity:invalid_enum', 'ttl_seconds:out_of_range'], $fields);
-        }
-    }
-
-    public function testServerSideActionValidationNamesTheAction(): void
-    {
-        try {
-            $this->client(['validate' => false])->send(Message::make('x')->action('Call', 'tel:+15550134')->action('Run', 'javascript:alert(1)'));
-            $this->fail('expected ValidationException');
-        } catch (ValidationException $e) {
-            $this->assertFalse($e->local);
-            $this->assertSame(422, $e->status);
-            $this->assertSame(['actions[1].url:invalid_format'], array_map(static fn ($f) => "{$f->field}:{$f->code}", $e->fields));
+            $this->assertSame(['event_type:invalid_enum'], array_map(static fn ($f) => "{$f->field}:{$f->code}", $e->fields));
+            $this->assertNotNull($e->requestId);
+            $this->assertStringContainsString('event_type invalid_enum', $e->getMessage());
         }
     }
 }

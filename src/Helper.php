@@ -11,21 +11,21 @@ namespace Honk;
 final class Helper
 {
     /**
-     * A problem for $groupKey; severity defaults to long (error).
+     * A problem for $groupKey (optional: null or "" groups by the title); severity defaults to long (error).
      *
      * @param array<string, mixed> $options message fields in camelCase, plus 'idempotencyKey'
      */
-    public static function problem(string $groupKey, ?string $title, string $message, array $options = []): Message
+    public static function problem(?string $groupKey, ?string $title, string $message, array $options = []): Message
     {
         return self::build(['groupKey' => $groupKey, 'eventType' => 'problem'], ['severity' => $options['severity'] ?? 'error'] + $options, $title, $message);
     }
 
     /**
-     * A recovery for $groupKey; severity defaults to beep (success).
+     * A recovery for $groupKey (optional, like problem()); severity defaults to beep (success).
      *
      * @param array<string, mixed> $options
      */
-    public static function recovery(string $groupKey, ?string $title, string $message, array $options = []): Message
+    public static function recovery(?string $groupKey, ?string $title, string $message, array $options = []): Message
     {
         return self::build(['groupKey' => $groupKey, 'eventType' => 'recovery'], ['severity' => $options['severity'] ?? 'success'] + $options, $title, $message);
     }

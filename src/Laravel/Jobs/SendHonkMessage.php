@@ -14,7 +14,7 @@ use Illuminate\Queue\Attributes\Backoff;
 use Illuminate\Queue\Attributes\Tries;
 
 /**
- * Sends one validated message, dispatched by Honk::queue(). The idempotency key is fixed at
+ * Sends one message, dispatched by Honk::queue(). The idempotency key is fixed at
  * dispatch time, so every retry (by the client and by the queue) is duplicate-free. Retryable
  * failures are rethrown for the queue's backoff; a daily quota releases the job until the reset;
  * invalid messages, auth errors and conflicts fail the job at once.

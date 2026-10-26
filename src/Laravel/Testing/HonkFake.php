@@ -17,7 +17,7 @@ use PHPUnit\Framework\Assert as PHPUnit;
 /**
  * Honk::fake(): records instead of sending, like Mail::fake() / Notification::fake().
  *
- * Messages are validated exactly like real sends (an invalid message still throws), defaults
+ * Messages are checked exactly like real sends (one without a message and a title still throws), defaults
  * and Context metadata are applied, and the recorded copy has a canonical Severity case, so
  * `fn (Message $m) => $m->severity === Severity::Loud` works whatever spelling was used.
  *
@@ -135,7 +135,7 @@ class HonkFake extends HonkManager implements Fake
     }
 
     /**
-     * A validated copy with defaults applied and a canonical Severity case.
+     * A copy with defaults applied and a canonical Severity case.
      */
     private function normalized(Message $message): Message
     {

@@ -102,7 +102,7 @@ class HonkManager
     }
 
     /**
-     * Validates the message now (mistakes surface in your code, not in the worker), fixes its
+     * Checks the message now (a message or a title; mistakes surface in your code, not in the worker), fixes its
      * idempotency key, defaults and Context metadata, and dispatches a SendHonkMessage job.
      * Its retries reuse the key, so they never create duplicates. Connection and queue come from
      * Queue::route() (set from honk.queue.connection / honk.queue.queue).
@@ -123,7 +123,7 @@ class HonkManager
 
     /**
      * Sends after the response: `Honk::defer()->loud('Disk 91%', '/var on app-01')`. The message
-     * is validated now. By default it is skipped when the request fails (4xx/5xx), like any
+     * is checked now. By default it is skipped when the request fails (4xx/5xx), like any
      * Laravel deferred function; pass always: true to send regardless.
      */
     public function defer(bool $always = false): PendingDeferredHonk
@@ -154,7 +154,8 @@ class HonkManager
     }
 
     /**
-     * Sends a prepared message and dispatches HonkSent / HonkFailed.
+     * Sends a prepared message, logs what the server corrected (honk.log_warnings) and dispatches
+     * HonkSent / HonkFailed.
      *
      * @internal used by the queued job, the channel and this class
      */
@@ -166,18 +167,42 @@ class HonkManager
             $this->events->dispatch(new HonkFailed($message, $e, $idempotencyKey, $via));
             throw $e;
         }
+        $this->logWarnings($accepted, $idempotencyKey);
         $this->events->dispatch(new HonkSent($message, $accepted, $idempotencyKey, $via));
 
         return $accepted;
     }
 
     /**
-     * A problem for $groupKey (opens or continues its incident); a Long message unless
+     * One warning-level log entry per correction the server made (unless honk.log_warnings is
+     * false). Logging never fails a delivered send.
+     */
+    protected function logWarnings(Accepted $accepted, string $idempotencyKey): void
+    {
+        if (!$accepted->hasWarnings() || ($this->config['log_warnings'] ?? true) === false) {
+            return;
+        }
+        try {
+            foreach ($accepted->warnings as $warning) {
+                logger()->warning('Honk corrected a message: ' . $warning, [
+                    'field' => $warning->field,
+                    'code' => $warning->code,
+                    'message_id' => $accepted->id,
+                    'idempotency_key' => $idempotencyKey,
+                ]);
+            }
+        } catch (Throwable) {
+            // The message is stored; logging must not turn that into an error.
+        }
+    }
+
+    /**
+     * A problem for $groupKey (opens or continues its incident; the group key is optional); a Long message unless
      * $options['severity'] says otherwise.
      *
      * @param array<string, mixed> $options
      */
-    public function uhoh(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function uhoh(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->honk(Helper::problem($groupKey, $title, $message, $options));
     }
@@ -187,7 +212,7 @@ class HonkManager
      *
      * @param array<string, mixed> $options
      */
-    public function problem(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function problem(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->uhoh($groupKey, $title, $message, $options);
     }
@@ -198,7 +223,7 @@ class HonkManager
      *
      * @param array<string, mixed> $options
      */
-    public function phew(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function phew(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->honk(Helper::recovery($groupKey, $title, $message, $options));
     }
@@ -208,7 +233,7 @@ class HonkManager
      *
      * @param array<string, mixed> $options
      */
-    public function recovery(string $groupKey, ?string $title, string $message, array $options = []): Accepted
+    public function recovery(?string $groupKey, ?string $title, string $message, array $options = []): Accepted
     {
         return $this->phew($groupKey, $title, $message, $options);
     }
@@ -328,7 +353,7 @@ class HonkManager
     }
 
     /**
-     * The validated message as camelCase fields with defaults applied (what the job stores).
+     * The message as camelCase fields with defaults applied (what the job stores).
      *
      * @return array<string, mixed>
      */

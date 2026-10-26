@@ -8,7 +8,8 @@ use DateTimeInterface;
 use Honk\Exception\ValidationException;
 
 /**
- * Fluent builder for one Honk event. Only the message text is required.
+ * Fluent builder for one Honk event. A message or a title is required; everything else is
+ * optional, and the server corrects what it cannot use (see Accepted::$warnings).
  *
  *     Message::make('Maria (Acme) asked for a quote')
  *         ->title('New request')
@@ -35,9 +36,9 @@ class Message
     public DateTimeInterface|string|null $occurredAt = null;
     public ?string $url = null;
     public ?string $imageUrl = null;
-    /** @var array<array-key, mixed>|null up to 3 ['title' => …, 'url' => …] buttons, in display order; checked when sent */
+    /** @var array<array-key, mixed>|null up to 3 ['title' => …, 'url' => …] buttons, in display order */
     public ?array $actions = null;
-    /** @var array<array-key, mixed>|null string keys and string/int/float/bool values; checked when sent */
+    /** @var array<array-key, mixed>|null string keys and string/int/float/bool values */
     public ?array $metadata = null;
     public ?int $ttlSeconds = null;
     public ?int $sourceSequence = null;
@@ -173,7 +174,7 @@ class Message
         return $out;
     }
 
-    /** One line, at most 160 characters. Defaults to the first line of the message. */
+    /** One line (the server shortens it to 160 characters). Defaults to the first line of the message. */
     public function title(?string $title): static
     {
         $this->title = $title;
@@ -181,7 +182,7 @@ class Message
         return $this;
     }
 
-    /** Plain text, 1–8192 bytes of UTF-8. Line breaks and tabs are allowed. */
+    /** Plain text; line breaks and tabs are allowed (the server shortens it to 8192 bytes). */
     public function message(string $message): static
     {
         $this->message = $message;
@@ -200,7 +201,7 @@ class Message
     /**
      * The Honk scale: light (info), beep (success), loud (warning), long (error), blast
      * (critical). A Severity case, a horn name or a canonical value, any case; sent canonical.
-     * long/error and blast/critical push at least as high priority.
+     * The level alone decides how loud the push is.
      */
     public function severity(Severity|string $severity): static
     {
@@ -285,7 +286,7 @@ class Message
         return $this;
     }
 
-    /** At most 64 characters. */
+    /** Where it comes from, e.g. "billing-api". */
     public function source(string $source): static
     {
         $this->source = $source;
@@ -293,7 +294,7 @@ class Message
         return $this;
     }
 
-    /** At most 32 characters. */
+    /** e.g. "production". */
     public function environment(string $environment): static
     {
         $this->environment = $environment;
@@ -301,7 +302,7 @@ class Message
         return $this;
     }
 
-    /** At most 64 characters. */
+    /** e.g. "payments". */
     public function channel(string $channel): static
     {
         $this->channel = $channel;
@@ -310,8 +311,8 @@ class Message
     }
 
     /**
-     * At most 128 characters. Messages with the same key (per environment, source and channel)
-     * form one group: one push, then calm updates. One key per customer request
+     * Optional. Messages with the same key (per environment, source and channel) form one
+     * group: one push, then calm updates; without one, a message groups by its title. One key per customer request
      * ("requests/{$id}"); a shared key only for repeats of the same problem.
      */
     public function groupKey(string $groupKey): static
@@ -321,7 +322,7 @@ class Message
         return $this;
     }
 
-    /** event, problem or recovery (problem/recovery need a group key). */
+    /** event, problem or recovery. */
     public function eventType(string $eventType): static
     {
         $this->eventType = $eventType;
@@ -357,10 +358,9 @@ class Message
      * Adds a button (at most 3, in display order; the first is the primary). Honk never opens the
      * URL; the app does when the button is tapped.
      *
-     * @param string $title 1–40 characters, one line, shown as sent: "Reply", "Call Maria"
-     * @param string $url   https:// (no credentials), mailto: with one address (?subject=…&body=…
-     *                      percent-encoded, no other keys), tel: or sms: with a number (sms: also
-     *                      ?body=…); at most 2048 bytes, no spaces
+     * @param string $title short, one line: "Reply", "Call Maria"
+     * @param string $url   https://, mailto:, tel: or sms: (the server leaves out a button it
+     *                      cannot use and says so in the warnings)
      */
     public function action(string $title, string $url): static
     {
@@ -382,8 +382,7 @@ class Message
     }
 
     /**
-     * Merges metadata: at most 16 keys matching [A-Za-z0-9_.-]{1,64}; values are strings
-     * (≤ 512 characters), numbers or booleans.
+     * Merges metadata: string keys; values are strings, numbers or booleans.
      *
      * @param array<string, string|int|float|bool> $metadata
      */
@@ -407,7 +406,7 @@ class Message
         return $this;
     }
 
-    /** Monotonic counter per source stream, for problem/recovery ordering. Needs a group key. */
+    /** Monotonic counter per source stream, for problem/recovery ordering. */
     public function sourceSequence(int $sequence): static
     {
         $this->sourceSequence = $sequence;

@@ -39,10 +39,10 @@ final class DeferTest extends TestCase
         $this->assertSame(['Always'], $sent);
     }
 
-    public function testDeferredMessagesAreValidatedImmediately(): void
+    public function testDeferredMessagesWithoutTextThrowImmediately(): void
     {
         $this->expectException(ValidationException::class);
-        Honk::defer()->loud('Bad', 'link', ['url' => 'ftp://example.com']);
+        Honk::defer()->honk(['severity' => 'loud', 'url' => 'https://example.com']);
     }
 
     public function testDeferredUhohPhewAndHonkMatchTheOldNames(): void

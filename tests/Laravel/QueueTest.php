@@ -99,26 +99,23 @@ final class QueueTest extends TestCase
         $this->assertSame($actions, $this->lastBody()['actions']);
     }
 
-    public function testInvalidActionsThrowAtDispatch(): void
+    public function testFieldContentsAreQueuedAsGivenForTheServerToCorrect(): void
     {
         Queue::fake();
-        try {
-            Honk::queue(['message' => 'x', 'actions' => [['title' => 'Run', 'url' => 'javascript:alert(1)']]]);
-            $this->fail('expected ValidationException');
-        } catch (ValidationException $e) {
-            $this->assertSame('actions[0].url', $e->fields[0]->field);
-        }
-        Queue::assertNothingPushed();
+        Honk::queue(['message' => 'x', 'severity' => 'fatal', 'actions' => [['title' => 'Run', 'url' => 'javascript:alert(1)']]]);
+        Queue::assertPushed(SendHonkMessage::class, fn (SendHonkMessage $job) => $job->message['severity'] === 'fatal'
+            && $job->message['actions'] === [['title' => 'Run', 'url' => 'javascript:alert(1)']]);
     }
 
-    public function testInvalidMessagesThrowAtDispatch(): void
+    public function testMessagesWithoutTextThrowAtDispatch(): void
     {
         Queue::fake();
         try {
-            Honk::queue(['message' => 'x', 'severity' => 'fatal']);
+            Honk::queue(['message' => '', 'severity' => 'loud']);
             $this->fail('expected ValidationException');
         } catch (ValidationException $e) {
             $this->assertTrue($e->local);
+            $this->assertSame('message', $e->fields[0]->field);
         }
         Queue::assertNothingPushed();
     }

@@ -25,9 +25,9 @@ enum Severity: string
     public const Beep = self::Success;
     /** Loud. */
     public const Loud = self::Warning;
-    /** Long (pushes at least as high priority). */
+    /** Long. */
     public const Long = self::Error;
-    /** Blast (pushes at least as high priority). */
+    /** Blast. */
     public const Blast = self::Critical;
 
     /** Horn name => canonical value. */
