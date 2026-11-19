@@ -6,6 +6,8 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-19
+
 The server now delivers first (contracts/API.md §5.1): it refuses only what it cannot deliver
 and corrects the rest, saying what it corrected. The SDK becomes a thin wrapper around that.
 
@@ -36,9 +38,28 @@ and corrects the rest, saying what it corrected. The SDK becomes a thin wrapper 
   and message, and the request id (`… (event_type invalid_enum: must be one of …) [request
   req_…]`). `FieldError` has a `__toString()`.
 - The key no longer has to start with `honk_` locally; the server answers `401 invalid_key`.
+- `ttlSeconds` and `sourceSequence` take a string too (`Message` properties, setters and
+  arrays): it is sent as given and the server converts it (`"3600"` → `3600`, `normalized`) or
+  leaves it out (`ignored`), instead of the SDK refusing it locally.
+- A list given as `metadata` is sent as a JSON array, as given, for the server to judge; it was
+  silently sent as an object `{"0": …}`. A map (or an empty array) is still an object.
 
 ### Deprecated
 - The `validate` constructor argument (and `fromEnv()` option) is accepted and ignored.
+
+### Fixed
+- Laravel: a notification route that is an ingestion key or an array of overrides reuses its
+  client (and its keep-alive connection) instead of building one per send.
+- Laravel: an array route's `defaults` override the configured defaults field by field, so
+  `['defaults' => ['channel' => 'vip']]` keeps the configured `source` and `environment`.
+- Laravel: an exception group key over 128 bytes is shortened on a UTF-8 character boundary
+  and keeps the line (`exceptions/<class>@<file>:<line>#<hash>`); a long non-ASCII file name
+  could make the body unencodable, so the exception was only logged.
+- `Client::fromEnv(['defaults' => ['channel' => null]])` no longer erases `HONK_CHANNEL` (or
+  `HONK_SOURCE`, `HONK_ENVIRONMENT`).
+- The URL error says `url must start with http:// or https://` (both are accepted).
+- README: the Laravel section lists `HONK_TIMEOUT`, `HONK_RETRIES`, `HONK_DEADLINE`; the errors
+  table says `429 overloaded` is a `QuotaException` too.
 
 ### Removed
 - Documentation of the retired `403 priority_not_allowed` and `requires_group_key`: an

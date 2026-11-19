@@ -97,6 +97,22 @@ final class ExceptionReportingTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/[\x00-\x1F]/', $key);
     }
 
+    public function testLongMultibyteFileNamesAreCutOnACharacterBoundaryAndKeepTheLine(): void
+    {
+        $e = new RuntimeException('x');
+        $place = new \ReflectionClass(\Exception::class);
+        $place->getProperty('file')->setValue($e, '/srv/app/' . str_repeat('ț', 80) . 'Ünicode.php');
+        $place->getProperty('line')->setValue($e, 4321);
+
+        $key = ExceptionHonker::groupKey($e, '/srv/app');
+
+        $this->assertLessThanOrEqual(128, strlen($key));
+        $this->assertTrue(mb_check_encoding($key, 'UTF-8'));
+        $this->assertNotFalse(json_encode($key, JSON_THROW_ON_ERROR));
+        $this->assertStringStartsWith('exceptions/RuntimeException@ț', $key);
+        $this->assertMatchesRegularExpression('/:4321#[0-9a-f]{12}$/', $key);
+    }
+
     public function testFailuresWhileReportingAreSwallowed(): void
     {
         config(['honk.url' => 'http://127.0.0.1:1', 'honk.exceptions.mode' => 'sync', 'honk.deadline' => 1, 'honk.retries' => 0]);

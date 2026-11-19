@@ -38,10 +38,12 @@ class Message
     public ?string $imageUrl = null;
     /** @var array<array-key, mixed>|null up to 3 ['title' => …, 'url' => …] buttons, in display order */
     public ?array $actions = null;
-    /** @var array<array-key, mixed>|null string keys and string/int/float/bool values */
+    /** @var array<array-key, mixed>|null string keys and string/int/float/bool values (a list is sent as a JSON array, for the server to judge) */
     public ?array $metadata = null;
-    public ?int $ttlSeconds = null;
-    public ?int $sourceSequence = null;
+    /** An integer; a string is sent as given and the server judges it (e.g. "3600" becomes 3600). */
+    public int|string|null $ttlSeconds = null;
+    /** An integer; a string is sent as given and the server judges it. */
+    public int|string|null $sourceSequence = null;
     /** Optional stable key for this event; reused on every retry. */
     public ?string $idempotencyKey = null;
 
@@ -132,10 +134,12 @@ class Message
                 'url' => $this->url = $value,
                 'imageUrl' => $this->imageUrl = $value,
                 'idempotencyKey' => $this->idempotencyKey = $value,
+                'ttlSeconds' => $this->ttlSeconds = $value,
+                'sourceSequence' => $this->sourceSequence = $value,
                 default => null,
             };
 
-            return !in_array($field, ['actions', 'metadata', 'ttlSeconds', 'sourceSequence'], true);
+            return !in_array($field, ['actions', 'metadata'], true);
         }
 
         if ($field === 'severity' && $value instanceof Severity) {
@@ -398,16 +402,16 @@ class Message
         return $this->metadata([$key => $value]);
     }
 
-    /** Push lifetime, 60–86400 seconds (default 3600). */
-    public function ttlSeconds(int $seconds): static
+    /** Push lifetime, 60–86400 seconds (default 3600). A string is sent as given, for the server to judge. */
+    public function ttlSeconds(int|string $seconds): static
     {
         $this->ttlSeconds = $seconds;
 
         return $this;
     }
 
-    /** Monotonic counter per source stream, for problem/recovery ordering. */
-    public function sourceSequence(int $sequence): static
+    /** Monotonic counter per source stream, for problem/recovery ordering. A string is sent as given. */
+    public function sourceSequence(int|string $sequence): static
     {
         $this->sourceSequence = $sequence;
 

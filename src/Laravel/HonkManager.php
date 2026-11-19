@@ -39,6 +39,12 @@ class HonkManager
 {
     private ?Client $client = null;
 
+    /** @var array<string, Client> clients for string and array routes, by their effective config */
+    private array $routeClients = [];
+
+    /** At most this many route clients are kept (the oldest is dropped first). */
+    private const ROUTE_CLIENTS = 32;
+
     /**
      * @param array<string, mixed> $config config/honk.php
      */
@@ -57,18 +63,63 @@ class HonkManager
 
     /**
      * The client for a notification route: null uses the default; a string is another ingestion
-     * key on the same server; an array overrides config keys (url, key, defaults, …); a Client is
-     * used as is.
+     * key on the same server; an array overrides config keys (url, key, timeout, …; its `defaults`
+     * override the configured defaults one by one); a Client is used as is. Clients for string and
+     * array routes are reused (keep-alive) for the same effective configuration.
      */
     public function clientFor(mixed $route): Client
     {
         return match (true) {
             $route === null => $this->client(),
             $route instanceof Client => $route,
-            is_string($route) => self::makeClient(['key' => $route] + $this->config),
-            is_array($route) => self::makeClient(self::stringKeys($route) + $this->config),
+            is_string($route) => $this->routeClient(['key' => $route] + $this->config),
+            is_array($route) => $this->routeClient(self::mergeRoute($this->config, self::stringKeys($route))),
             default => throw new InvalidArgumentException('Honk: routeNotificationForHonk() must return null, false, an ingestion key, an array of config overrides or a Honk\Client'),
         };
+    }
+
+    /**
+     * The cached client for an effective route configuration.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function routeClient(array $config): Client
+    {
+        $id = (string) json_encode([
+            self::string($config['url'] ?? null),
+            self::string($config['key'] ?? null),
+            self::number($config['timeout'] ?? null, 5),
+            self::number($config['retries'] ?? null, 4),
+            self::number($config['deadline'] ?? null, 30),
+            self::defaultsFrom($config),
+        ]);
+        if (isset($this->routeClients[$id])) {
+            return $this->routeClients[$id];
+        }
+        $client = self::makeClient($config); // may throw (no key, bad url): nothing is cached then
+        if (count($this->routeClients) >= self::ROUTE_CLIENTS) {
+            unset($this->routeClients[array_key_first($this->routeClients)]);
+        }
+
+        return $this->routeClients[$id] = $client;
+    }
+
+    /**
+     * Config with an array route's overrides; `defaults` are merged per field, so a route that sets
+     * only `defaults.channel` keeps the configured source and environment.
+     *
+     * @param array<string, mixed> $config
+     * @param array<string, mixed> $route
+     *
+     * @return array<string, mixed>
+     */
+    private static function mergeRoute(array $config, array $route): array
+    {
+        if (is_array($route['defaults'] ?? null) && is_array($config['defaults'] ?? null)) {
+            $route['defaults'] = array_replace($config['defaults'], $route['defaults']);
+        }
+
+        return $route + $config;
     }
 
     /**

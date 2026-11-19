@@ -499,7 +499,7 @@ final class ClientTest extends TestCase
     {
         foreach ([
             [['url' => '', 'key' => self::KEY], 'HONK_URL'],
-            [['url' => 'honk.example.com', 'key' => self::KEY], 'https://'],
+            [['url' => 'honk.example.com', 'key' => self::KEY], 'must start with http:// or https://'],
             [['url' => 'https://h', 'key' => ''], 'HONK_KEY'],
             [['url' => 'https://h', 'key' => self::KEY, 'retries' => -1], 'retries'],
         ] as [$args, $needle]) {
@@ -519,6 +519,9 @@ final class ClientTest extends TestCase
         try {
             Client::fromEnv(['retries' => 0])->send(['message' => 'x']);
             $this->assertSame('{"message":"x","source":"cron","environment":"staging"}', $this->server->requests()[0]['body']);
+            // A null option keeps the variable's value; a string overrides it.
+            Client::fromEnv(['retries' => 0, 'defaults' => ['source' => null, 'environment' => 'prod']])->send(['message' => 'x']);
+            $this->assertSame('{"message":"x","source":"cron","environment":"prod"}', $this->server->requests()[1]['body']);
         } finally {
             $_ENV = $saved;
         }

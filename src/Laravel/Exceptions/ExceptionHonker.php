@@ -83,13 +83,18 @@ final class ExceptionHonker
         if ($basePath !== '' && str_starts_with($file, $basePath)) {
             $file = ltrim(substr($file, strlen($basePath)), '/\\');
         }
+        $file = mb_scrub($file, 'UTF-8'); // invalid bytes would make the body unencodable
         $class = self::className($e);
         $key = 'exceptions/' . $class . '@' . $file . ':' . $e->getLine();
         if (strlen($key) <= 128) {
             return $key;
         }
+        // Over 128 bytes: the class and file name are shortened (on a UTF-8 character boundary),
+        // never the line, and a hash of the full key keeps different places apart.
+        $tail = ':' . $e->getLine() . '#' . substr(sha1($key), 0, 12);
+        $head = 'exceptions/' . class_basename($class) . '@' . basename($file);
 
-        return substr('exceptions/' . class_basename($class) . '@' . basename($file) . ':' . $e->getLine(), 0, 115) . '#' . substr(sha1($key), 0, 12);
+        return mb_strcut($head, 0, 128 - strlen($tail), 'UTF-8') . $tail;
     }
 
     /** The class name, without the NUL byte and path PHP appends to anonymous classes. */

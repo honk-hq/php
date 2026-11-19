@@ -32,7 +32,7 @@ use Psr\Http\Message\StreamFactoryInterface;
  */
 final class Client
 {
-    public const VERSION = '0.3.2';
+    public const VERSION = '0.4.0';
 
     private readonly string $url;
     private readonly string $key;
@@ -77,7 +77,7 @@ final class Client
             throw new InvalidArgumentException('Honk: url is required (the base address of your Honk server, e.g. https://honk.example.com; is HONK_URL set?)');
         }
         if (preg_match('~^https?://[^/]+~i', $url) !== 1) {
-            throw new InvalidArgumentException(sprintf('Honk: url must start with https:// (got "%s")', $url));
+            throw new InvalidArgumentException(sprintf('Honk: url must start with http:// or https:// (got "%s")', $url));
         }
         $this->url = (string) preg_replace('~/v1/messages$~', '', $url);
         $key = trim($key);
@@ -119,7 +119,7 @@ final class Client
             timeoutMs: $options['timeoutMs'] ?? 5000,
             retries: $options['retries'] ?? 4,
             deadlineMs: $options['deadlineMs'] ?? 30000,
-            defaults: ($options['defaults'] ?? []) + $defaults,
+            defaults: array_filter($options['defaults'] ?? [], static fn ($v) => $v !== null) + $defaults, // a null option keeps the variable
             validate: $options['validate'] ?? true,
             httpClient: $options['httpClient'] ?? null,
             requestFactory: $options['requestFactory'] ?? null,

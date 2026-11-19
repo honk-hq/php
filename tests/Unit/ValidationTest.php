@@ -22,7 +22,7 @@ final class ValidationTest extends TestCase
         yield 'blank message, no title' => [['message' => '   '], 'message', 'required'];
         yield 'blank message and title' => [['message' => '', 'title' => " \t"], 'message', 'required'];
         yield 'snake case' => [['message' => 'x', 'group_key' => 'g'], 'group_key', 'not_allowed'];
-        yield 'wrong type' => [['message' => 'x', 'ttlSeconds' => 'soon'], 'ttl_seconds', 'invalid_format'];
+        yield 'wrong type' => [['message' => 'x', 'ttlSeconds' => ['soon']], 'ttl_seconds', 'invalid_format'];
     }
 
     /** @param array<string, mixed> $fields */
@@ -79,6 +79,27 @@ final class ValidationTest extends TestCase
         $this->assertSame(5, $body['ttl_seconds']);
         $this->assertSame($actions, $body['actions']);
         $this->assertSame(9000, strlen($body['message']));
+    }
+
+    /** Strings for the integer fields are not refused locally: the server converts or ignores them. */
+    public function testIntegerFieldsGivenAsStringsAreSentAsGiven(): void
+    {
+        $body = Wire::build(Message::fromArray(['message' => 'x', 'ttlSeconds' => '3600', 'sourceSequence' => 'soon']));
+        $this->assertSame('3600', $body['ttl_seconds']);
+        $this->assertSame('soon', $body['source_sequence']);
+        $body = Wire::build(Message::make('x')->ttlSeconds(120)->sourceSequence('7'));
+        $this->assertSame(120, $body['ttl_seconds']);
+        $this->assertSame('7', $body['source_sequence']);
+        $this->assertSame('{"message":"x","ttl_seconds":120,"source_sequence":"7"}', Wire::encode($body));
+    }
+
+    /** A list is a JSON array on the wire (the server judges it); a map or an empty array is an object. */
+    public function testMetadataListsStayArrays(): void
+    {
+        $this->assertSame('{"message":"x","metadata":["a","b"]}', Wire::encode(Wire::build(Message::fromArray(['message' => 'x', 'metadata' => ['a', 'b']]))));
+        $this->assertSame('{"message":"x","metadata":{"host":"app-01"}}', Wire::encode(Wire::build(Message::make('x')->metadata(['host' => 'app-01']))));
+        $this->assertSame('{"message":"x","metadata":{}}', Wire::encode(Wire::build(Message::make('x')->metadata([]))));
+        $this->assertSame('{"message":"x","metadata":{"1":"a"}}', Wire::encode(Wire::build(Message::fromArray(['message' => 'x', 'metadata' => [1 => 'a']]))));
     }
 
     public function testTitleAloneIsEnough(): void

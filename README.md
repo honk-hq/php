@@ -87,6 +87,10 @@ connection:
 ```dotenv
 HONK_URL=https://honk.example.com
 HONK_KEY=honk_xxxxxxxxxxxx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# optional (config/honk.php defaults shown), in seconds:
+HONK_TIMEOUT=5    # one HTTP attempt
+HONK_RETRIES=4    # retries after the first attempt (network errors, 429 and 5xx); 0 = none
+HONK_DEADLINE=30  # total budget of one send, retries and waits included
 ```
 
 ```sh
@@ -418,7 +422,7 @@ The server refuses only what it cannot deliver: a bad or missing key, invalid JS
 |---|---|---|
 | `ValidationException` | `400`/`413`/`415`/`422`, or locally (`local === true`) for no message and no title or an invalid idempotency key; `fields` lists each field with its code and message | fix the message |
 | `AuthException` | `401 invalid_key`, `403 project_suspended`, `workspace_suspended` | fix the key |
-| `QuotaException` | `429 quota_exceeded` (daily, resets at UTC midnight) or `rate_limited`, after retries | retry after `retryAfter` seconds |
+| `QuotaException` | `429 quota_exceeded` (daily, resets at UTC midnight), `rate_limited` or `overloaded` (server backpressure), after retries | retry after `retryAfter` seconds |
 | `ConflictException` | `409 idempotency_conflict`: same key, different payload | use a new key or the original payload |
 | `NetworkException` | unreachable on every attempt | retry later, same key |
 | `TimeoutException` (a `NetworkException`) | attempts timed out; the message may or may not be stored | retry later, same key |
@@ -457,6 +461,8 @@ The version lives in `Honk\Client::VERSION` (also the User-Agent). Releases: pus
 - [honk-honk.app](https://honk-honk.app): the Honk! Honk! inbox (web, iPhone).
 - Other SDKs: [Node.js](https://github.com/honk-hq/node),
   [Go + CLI](https://github.com/honk-hq/go), [Swift](https://github.com/honk-hq/honk-swift),
-  [Kotlin / Java](https://github.com/honk-hq/kotlin).
+  [Kotlin / Java](https://github.com/honk-hq/kotlin), [Rust](https://github.com/honk-hq/rust).
+- No code: [n8n node](https://github.com/honk-hq/n8n) (`n8n-nodes-honk`) and the
+  [WordPress plugin](https://github.com/honk-hq/wordpress).
 
 MIT License.

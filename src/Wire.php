@@ -63,7 +63,9 @@ final class Wire
      */
     public static function encode(array $body): string
     {
-        if (isset($body['metadata']) && is_array($body['metadata'])) {
+        // An associative array (or an empty one) is a JSON object; a non-empty list stays a JSON
+        // array, as given, and the server judges it instead of the SDK converting it silently.
+        if (isset($body['metadata']) && is_array($body['metadata']) && ($body['metadata'] === [] || !array_is_list($body['metadata']))) {
             $body['metadata'] = (object) $body['metadata'];
         }
         $json = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);

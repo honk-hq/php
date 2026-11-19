@@ -76,6 +76,23 @@ final class NotificationChannelTest extends TestCase
         $this->assertCount(2, $this->server->requests());
     }
 
+    public function testRouteClientsAreReusedAndRouteDefaultsMergePerField(): void
+    {
+        $honk = app(\Honk\Laravel\HonkManager::class);
+        $other = 'honk_zz12cd34ef56_0123456789abcdefghijABCDEFGHIJ0123';
+        $this->assertSame($honk->clientFor($other), $honk->clientFor($other));
+        $route = ['key' => $other, 'defaults' => ['channel' => 'vip']];
+        $this->assertSame($honk->clientFor($route), $honk->clientFor($route));
+        $this->assertNotSame($honk->clientFor($other), $honk->clientFor($route));
+        $this->assertNotSame($honk->clientFor($route), $honk->clientFor(['key' => $other, 'defaults' => ['channel' => 'ops']]));
+
+        (new Owner($route))->notify(new InlineNotification('from a vip'));
+        $body = $this->lastBody();
+        $this->assertSame('vip', $body['channel']);
+        $this->assertSame('laravel', $body['source']);
+        $this->assertSame('testing', $body['environment']);
+    }
+
     public function testToHonkMayReturnAnArrayOrAString(): void
     {
         (new Owner())->notify(new InlineNotification(['message' => 'from array', 'groupKey' => 'g', 'idempotencyKey' => 'fixed-1']));
